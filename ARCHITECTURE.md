@@ -36,6 +36,8 @@ applirank/
 │   │   └── public.vue            # Simple header/footer for public pages
 │   ├── middleware/                # Client-side route middleware
 │   ├── pages/                    # File-based routing
+│   │   ├── index.vue             # Public landing page (dark theme)
+│   │   ├── roadmap.vue           # Public roadmap (horizontal timeline)
 │   │   ├── dashboard/
 │   │   │   └── jobs/
 │   │   │       └── [id]/
@@ -207,7 +209,7 @@ When a page file `pages/[id].vue` and a directory `pages/[id]/` coexist, Nuxt tr
 
 ### 9. Public vs Authenticated Routes
 
-Public-facing endpoints live under `server/api/public/` and require no authentication. They only expose data for resources in an `open` state (e.g., jobs). Public pages live under `app/pages/jobs/` and use the `public` layout.
+Public-facing endpoints live under `server/api/public/` and require no authentication. They only expose data for resources in an `open` state (e.g., jobs). Public pages live under `app/pages/jobs/` and use the `public` layout. The landing page (`app/pages/index.vue`) and roadmap page (`app/pages/roadmap.vue`) are also public — they use the `default` layout with a custom dark theme.
 
 ## Security Boundaries
 

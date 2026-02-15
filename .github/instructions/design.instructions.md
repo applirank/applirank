@@ -57,9 +57,9 @@ Keep inline brand SVGs compact (single `<svg>` with `<path>`). Wrap in a contain
 
 ---
 
-## 2. Landing Page — Dark Theme
+## 2. Landing Page & Roadmap — Dark Theme
 
-The public landing page (`app/pages/index.vue`) establishes the brand identity.
+The public landing page (`app/pages/index.vue`) and roadmap page (`app/pages/roadmap.vue`) establish the brand identity. Both use the same dark aesthetic.
 
 ### Color palette
 

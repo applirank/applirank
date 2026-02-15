@@ -1,6 +1,6 @@
 # Applirank — Roadmap
 
-> Last updated: 2026-02-15 (security hardening + inline preview)
+> Last updated: 2026-02-15 (public roadmap page)
 >
 > This is the single source of truth for what's built, what's in progress, and what's planned.
 > For product vision see [PRODUCT.md](PRODUCT.md). For architecture see [ARCHITECTURE.md](ARCHITECTURE.md).
@@ -65,6 +65,22 @@ Dark-mode marketing page communicating the product vision to visitors.
 - [x] Auth-aware navbar — Dashboard link for authenticated users, Sign In/Get Started for guests
 - [x] SEO meta tags via `useSeoMeta` (title, description, OpenGraph)
 - [x] `useHead` body background override to prevent light-mode bleed on dark page
+- [x] Roadmap showcase section on landing page — mini timeline with Shipped/Building/Vision counts and CTA to full roadmap
+
+### Milestone 2.6: Public Roadmap Page ✅
+
+Cinematic horizontal-scrolling roadmap page showing product progress.
+
+- [x] Public roadmap page (`app/pages/roadmap.vue`) — horizontal timeline with glassmorphism cards
+- [x] 15 milestone cards with title, description, icon, feature highlights list
+- [x] Color-coded statuses: green (shipped), blue (building), purple (vision)
+- [x] Intro card — same card style as milestones, centered on page load
+- [x] Smooth horizontal scroll — mousewheel-to-horizontal conversion with requestAnimationFrame easing
+- [x] Timeline axis with scroll-tracking progress glow (green → blue gradient)
+- [x] End CTA — "Shape the future" with GitHub Issues and Get Started buttons
+- [x] Auth-aware navbar matching landing page
+- [x] Dark theme consistent with landing page (`#09090b`, glass borders, ambient glow blobs)
+- [x] Linked from landing page navbar, footer, and roadmap showcase section
 
 ### Milestone 3: Job Management ✅
 
@@ -270,6 +286,7 @@ Goal: Ready for real teams to self-host in production.
 | 1. Foundation | 2026-02-14 |
 | 2. Auth UI & Navigation | 2026-02-14 |
 | 2.5. Public Landing Page | 2026-02-14 |
+| 2.6. Public Roadmap Page | 2026-02-15 |
 | 3. Job Management | 2026-02-14 |
 | 7a. Custom Application Forms & Public Submission | 2026-02-14 |
 | 7b. Public Job Board | 2026-02-14 |

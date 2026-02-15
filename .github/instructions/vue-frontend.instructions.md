@@ -464,6 +464,7 @@ export function useSidebar() {
 ```
 app/pages/
 ├── index.vue               → /           (public landing page — dark theme, no auth required)
+├── roadmap.vue             → /roadmap    (public roadmap — horizontal timeline, dark theme)
 ├── auth/
 │   ├── sign-in.vue         → /auth/sign-in
 │   └── sign-up.vue         → /auth/sign-up
@@ -1053,7 +1054,7 @@ import { ArrowRight, Database, ShieldCheck } from 'lucide-vue-next'
 
 ## 18. Landing Page Patterns
 
-The public landing page (`app/pages/index.vue`) is a standalone dark-mode marketing page. These patterns apply when building similar public pages.
+The public landing page (`app/pages/index.vue`) is a standalone dark-mode marketing page. The roadmap page (`app/pages/roadmap.vue`) uses the same dark aesthetic with a horizontal-scrolling card timeline. These patterns apply when building similar public pages.
 
 ### Dark page in a light-mode app
 

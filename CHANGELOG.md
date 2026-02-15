@@ -10,6 +10,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com). Categories: **Add
 
 ### Added
 
+- **Public roadmap page** (`app/pages/roadmap.vue`) — cinematic horizontal-scrolling timeline with 15 glassmorphism milestone cards, color-coded by status (shipped/building/vision), scroll-tracking progress glow on the timeline axis, smooth mousewheel-to-horizontal scroll conversion via requestAnimationFrame, and intro card centered on page load
+- **Roadmap showcase section on landing page** — "Built in the open" section with mini timeline showing Shipped/Building/Vision counts and prominent CTA to full roadmap
+- **Roadmap navigation links** — Roadmap link added to landing page navbar and footer
+
+---
+
+## 2026-02-15
+
+### Added
+
 - **IP-based rate limiting** — reusable `createRateLimiter()` utility (`server/utils/rateLimit.ts`) using a sliding window algorithm with automatic stale entry pruning; applied to public application endpoint (5 requests per IP per 15 minutes); returns standard `X-RateLimit-*` headers and `429 Too Many Requests` when exceeded
 - **Candidates table view per job** — new `/dashboard/jobs/:id/candidates` page showing all applicants in a Supabase-style data table with columns for name, email, status, score, and applied date; includes status filter dropdown
 - **Candidate detail sidebar** — clicking a row in the candidates table opens a slide-over panel (`CandidateDetailSidebar.vue`) with full application details: status transitions, candidate info, notes (editable inline), question responses, and links to full candidate/application pages

@@ -74,6 +74,7 @@ The `dashboard` layout (`app/layouts/dashboard.vue`) provides only the sidebar +
 - **Authenticated API**: `server/api/jobs/`, `server/api/candidates/` — require `requireAuth(event)`
 - **Public API**: `server/api/public/jobs/` — no auth, only exposes open jobs, uses slug-based URLs
 - **Public pages**: `app/pages/jobs/` — job board, job detail, application form (uses `public` layout)
+- **Public standalone pages**: `app/pages/index.vue` (landing), `app/pages/roadmap.vue` (roadmap) — dark theme, no layout
 - **Dashboard pages**: `app/pages/dashboard/` — recruiter UI (uses `dashboard` layout, requires auth)
 
 ### URL Slugs (Public Job Pages)
@@ -153,9 +154,9 @@ import { ArrowRight, Database, ShieldCheck } from 'lucide-vue-next'
 - Use `class="size-N"` for sizing (Tailwind `size-4`, `size-5`, `size-6`)
 - For brand logos (Nuxt, PostgreSQL, etc.) use inline SVG — Lucide doesn't include brand icons
 
-## Design System — Landing Page Dark Theme
+## Design System — Landing Page & Roadmap Dark Theme
 
-The public landing page (`app/pages/index.vue`) uses a dark aesthetic inspired by Linear/Resend/Raycast:
+The public landing page (`app/pages/index.vue`) and roadmap page (`app/pages/roadmap.vue`) use a dark aesthetic inspired by Linear/Resend/Raycast:
 
 | Token | Value | Usage |
 |-------|-------|-------|
