@@ -1,53 +1,71 @@
+<div align="center">
+
 # Applirank
 
-**The Sovereign Recruitment Engine** — an open-source Applicant Tracking System (ATS) that gives you full ownership of your hiring data.
+**The open-source ATS you own. No per-seat fees. No data lock-in. No secret algorithms.**
 
-Applirank is the **Glass Box** alternative to Black Box incumbents. No per-seat pricing. No data lock-in. No secret algorithms.
+[Live Demo](https://demo.applirank.com) · [Documentation](ARCHITECTURE.md) · [Roadmap](ROADMAP.md) · [Report Bug](https://github.com/applirank/applirank/issues/new)
 
-- **Own your data** — Postgres + MinIO on your infrastructure. Your talent pool is a permanent asset.
-- **Auditable AI** — Every AI ranking comes with a visible Matching Logic summary. No opaque algorithms.
-- **No seat tax** — Scale your hiring team without scaling your software bill.
-- **Privacy-first** — Support for local AI (Ollama) and local storage. Candidate PII never has to leave your network.
+[![License: ELv2](https://img.shields.io/badge/License-ELv2-blue.svg)](LICENSE)
 
-> **Status**: Early development — foundation and database schema are complete, building the first UI screens. See the [Roadmap](ROADMAP.md) for details.
+</div>
 
-## Tech Stack
+---
 
-| Layer | Technology |
-|-------|-----------|
-| Framework | [Nuxt 4](https://nuxt.com) (Vue 3 + Nitro) |
-| Database | PostgreSQL 16 |
-| ORM | [Drizzle ORM](https://orm.drizzle.team) + postgres.js |
-| Auth | [Better Auth](https://www.better-auth.com) (sessions, orgs, OAuth) |
-| Object Storage | [MinIO](https://min.io) (S3-compatible) |
-| Validation | [Zod v4](https://zod.dev) |
-| Infrastructure | Docker Compose |
-| Reverse Proxy | [Caddy](https://caddyserver.com) (auto-HTTPS) |
-| CDN | [Cloudflare](https://cloudflare.com) (Free plan) |
-| Hosting | [Hetzner Cloud](https://hetzner.com/cloud) (CX23) |
+Most recruiting software holds your candidate data hostage behind per-seat pricing and opaque algorithms. Applirank is different — it runs on **your** infrastructure, your team scales without increasing your software bill, and when AI ranks a candidate, it shows you exactly why.
 
-## Getting Started
+## Why Applirank?
 
-### Prerequisites
+| | **Applirank** | Greenhouse | Lever | Ashby | OpenCATS |
+|---|:---:|:---:|:---:|:---:|:---:|
+| **Open source** | ✅ | ❌ | ❌ | ❌ | ✅ |
+| **Self-hosted** | ✅ | ❌ | ❌ | ❌ | ✅ |
+| **No per-seat pricing** | ✅ | ❌ | ❌ | ❌ | ✅ |
+| **Own your data** | ✅ | ❌ | ❌ | ❌ | ✅ |
+| **Transparent AI ranking** | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **Modern tech stack** | Nuxt 4 / Vue 3 | — | — | — | PHP 5 |
+| **Active development** | ✅ 2026 | ✅ | ✅ | ✅ | ❌ Stale |
+| **Resume parsing** | 🔜 | ✅ | ✅ | ✅ | ❌ |
+| **Pipeline / Kanban** | ✅ | ✅ | ✅ | ✅ | ❌ |
+| **Public job board** | ✅ | ✅ | ✅ | ✅ | ❌ |
+| **Document storage** | ✅ MinIO | ✅ | ✅ | ✅ | ✅ |
+| **Custom application forms** | ✅ | ✅ | ✅ | ✅ | ❌ |
+| **Local AI (privacy-first)** | 🔜 Ollama | ❌ | ❌ | ❌ | ❌ |
 
-- [Node.js](https://nodejs.org) 20+
-- [Docker](https://docs.docker.com/get-docker/) and Docker Compose
-- npm (ships with Node.js)
+## Features
 
-### 1. Clone the repository
+- **Job management** — Create, edit, and track jobs through draft → open → closed → archived
+- **Candidate pipeline** — Drag candidates through screening → interview → offer → hired with a Kanban board
+- **Public job board** — SEO-friendly job listings with custom slugs that applicants can browse and apply to
+- **Custom application forms** — Add custom questions (text, select, file upload, etc.) per job
+- **Document storage** — Upload and manage resumes and cover letters via S3-compatible storage (MinIO)
+- **Multi-tenant organizations** — Isolated data per organization with role-based membership
+- **Recruiter dashboard** — At-a-glance stats, pipeline breakdown, recent applications, and top active jobs
+- **Server-proxied documents** — Resumes are never exposed via public URLs; all access is authenticated and streamed
+
+## Quick Start
 
 ```bash
-git clone https://github.com/your-org/applirank.git
+git clone https://github.com/applirank/applirank.git
 cd applirank
+cp .env.example .env          # configure your environment
+docker compose up -d           # start Postgres + MinIO
+npm install && npm run dev     # app at http://localhost:3000
 ```
 
-### 2. Set up environment variables
+Migrations run automatically on startup. That's it.
+
+### Seed demo data
+
+To populate your local instance with realistic sample data (5 jobs, 30 candidates, 65+ applications across all pipeline stages):
 
 ```bash
-cp .env.example .env
+npm run db:seed
 ```
 
-Configure the following in `.env`:
+This creates a demo user (`demo@applirank.com` / `demo1234`) with a pre-configured organization.
+
+### Environment Variables
 
 ```env
 # Database
@@ -69,68 +87,56 @@ S3_SECRET_KEY=minioadmin
 S3_BUCKET=applirank
 ```
 
-### 3. Start infrastructure
+## Tech Stack
 
-```bash
-docker compose up -d
-```
-
-This starts:
-
-| Service | URL | Purpose |
-|---------|-----|---------|
-| PostgreSQL | `localhost:5432` | Database |
-| MinIO Console | [localhost:9001](http://localhost:9001) | Object storage admin |
-| MinIO S3 API | `localhost:9000` | S3-compatible API |
-| Adminer | [localhost:8080](http://localhost:8080) | Database GUI |
-
-### 4. Install dependencies and start the dev server
-
-```bash
-npm install
-npm run dev
-```
-
-The app is now running at [http://localhost:3000](http://localhost:3000).
-
-Database migrations are applied automatically on startup.
+| Layer | Technology |
+|-------|-----------|
+| Framework | [Nuxt 4](https://nuxt.com) (Vue 3 + Nitro) |
+| Database | PostgreSQL 16 |
+| ORM | [Drizzle ORM](https://orm.drizzle.team) + postgres.js |
+| Auth | [Better Auth](https://www.better-auth.com) with organization plugin |
+| Storage | [MinIO](https://min.io) (S3-compatible) |
+| Validation | [Zod v4](https://zod.dev) |
+| Styling | [Tailwind CSS v4](https://tailwindcss.com) |
+| Icons | [Lucide](https://lucide.dev) (tree-shakeable) |
 
 ## Project Structure
 
 ```
-app/                  # Frontend (pages, components, composables)
-server/
-  api/                # API routes
-  database/
-    schema/           # Drizzle ORM table definitions
-    migrations/       # Generated SQL migrations
-  utils/              # Auto-imported server utilities (db, auth, env)
-  plugins/            # Server lifecycle plugins
-docker-compose.yml    # Local infrastructure
+app/                          # Frontend (Nuxt 4 srcDir)
+  pages/                      #   File-based routing
+  components/                 #   Auto-imported Vue components
+  composables/                #   Auto-imported composables (useJobs, useCandidates, etc.)
+  layouts/                    #   Dashboard, auth, and public layouts
+server/                       # Backend (Nitro)
+  api/                        #   REST API routes (authenticated + public)
+  database/schema/            #   Drizzle ORM table definitions
+  database/migrations/        #   Generated SQL migrations
+  utils/                      #   Auto-imported utilities (db, auth, env, s3)
+  plugins/                    #   Startup plugins (migrations, S3 bucket)
+docker-compose.yml            # Postgres + MinIO + Adminer
 ```
 
 ## Deployment
 
-Applirank runs on a Hetzner Cloud CX23 VPS (2 vCPU, 4GB RAM, Ubuntu 24.04) with Cloudflare CDN in front.
+Applirank is designed to run on a single VPS. The reference deployment uses:
 
 | Component | Role |
 |-----------|------|
-| Cloudflare | DNS, DDoS protection, edge SSL |
-| Caddy | Reverse proxy with auto-TLS |
-| systemd | Process management (auto-restart) |
-| Docker Compose | Postgres + MinIO |
+| **Hetzner Cloud CX23** | 2 vCPU, 4GB RAM, Ubuntu 24.04 (~€5/mo) |
+| **Caddy** | Reverse proxy with automatic HTTPS |
+| **Cloudflare** | DNS, DDoS protection, edge SSL (free tier) |
+| **Docker Compose** | Postgres + MinIO (localhost only) |
+| **systemd** | Process management with auto-restart |
 
-### Deploy updates
-
-After pushing to GitHub:
+### Deploy
 
 ```bash
-ssh -i ~/.ssh/hetzner deploy@<server-ip> '~/deploy.sh'
+ssh deploy@your-server '~/deploy.sh'
+# Pulls latest code, installs, builds, restarts — zero downtime
 ```
 
-The deploy script pulls, installs, builds, and restarts the app.
-
-For full architecture details, see [ARCHITECTURE.md](ARCHITECTURE.md).
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the full deployment architecture diagram.
 
 ## Scripts
 
@@ -138,16 +144,29 @@ For full architecture details, see [ARCHITECTURE.md](ARCHITECTURE.md).
 |---------|-------------|
 | `npm run dev` | Start development server |
 | `npm run build` | Build for production |
-| `npm run preview` | Preview production build |
 | `npm run db:generate` | Generate migrations from schema changes |
-| `npm run db:migrate` | Run pending migrations |
+| `npm run db:seed` | Seed database with demo data |
 | `npm run db:studio` | Open Drizzle Studio (database browser) |
 
 ## Roadmap
 
-See [ROADMAP.md](ROADMAP.md) for the full implementation plan and current progress.
+Applirank is actively developed. Here's what's next:
 
-See [PRODUCT.md](PRODUCT.md) for the product vision and feature goals.
+| Status | Milestone |
+|--------|-----------|
+| ✅ Shipped | Jobs, Candidates, Applications, Pipeline, Documents, Dashboard, Public Job Board, Custom Forms |
+| 🔨 Building | Resume parsing (PDF → structured data) |
+| 🔮 Planned | AI candidate ranking (Glass Box — shows matching logic), team collaboration, email notifications, candidate portal |
+
+See the full [Roadmap](ROADMAP.md) and [Product Vision](PRODUCT.md).
+
+## Contributing
+
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions and guidelines.
+
+## License
+
+[Elastic License 2.0](LICENSE) — free to use and self-host. See the license file for details.
 
 ## Contributing
 
