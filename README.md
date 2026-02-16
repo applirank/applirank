@@ -57,7 +57,7 @@ Most recruiting software holds your candidate data hostage behind per-seat prici
 
 ### Prerequisites
 
-You need three tools installed: **Git**, **Node.js** (v20+), and **Docker Desktop** (or Docker Engine). Pick your operating system below and follow every step — even if you've never used a terminal before.
+You need three tools installed: **Git**, **Node.js** (v20 or later), and **Docker Desktop** (or Docker Engine on Linux). Pick your operating system below and follow every step — even if you've never used a terminal before.
 
 <details>
 <summary><strong>🐧 Linux (Ubuntu / Debian)</strong></summary>
@@ -72,19 +72,24 @@ sudo apt update && sudo apt install -y git
 
 Verify: `git --version` → should print something like `git version 2.x.x`.
 
-**2. Install Node.js 22 (LTS)**
+**2. Install Node.js (LTS)**
 
 The version in your distro's default repos is often outdated. Use the official NodeSource installer:
 
 ```bash
-# Download and run the NodeSource setup script for Node.js 22
-curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+# Download the NodeSource setup script for the latest LTS
+curl -fsSL https://deb.nodesource.com/setup_lts.x -o nodesource_setup.sh
+
+# Run the setup script
+sudo -E bash nodesource_setup.sh
+
+# Install Node.js
 sudo apt install -y nodejs
 ```
 
 Verify:
 ```bash
-node --version   # should print v22.x.x or higher
+node --version   # should print v20.x.x or higher
 npm --version    # should print 10.x.x or higher
 ```
 
@@ -92,15 +97,20 @@ npm --version    # should print 10.x.x or higher
 
 ```bash
 # Install Docker's official GPG key and repository
+sudo apt update
 sudo apt install -y ca-certificates curl
 sudo install -m 0755 -d /etc/apt/keyrings
 sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
 sudo chmod a+r /etc/apt/keyrings/docker.asc
 
-echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+# Add the Docker repository (DEB822 format)
+sudo tee /etc/apt/sources.list.d/docker.sources <<EOF
+Types: deb
+URIs: https://download.docker.com/linux/ubuntu
+Suites: $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
+Components: stable
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
 
 sudo apt update
 sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
@@ -116,11 +126,11 @@ sudo usermod -aG docker $USER
 
 Verify:
 ```bash
-docker --version          # Docker version 27.x.x
-docker compose version    # Docker Compose version v2.x.x
+docker --version          # should print Docker version 2x.x.x
+docker compose version    # should print Docker Compose version v2.x.x
 ```
 
-> **Debian users:** Replace `ubuntu` with `debian` in the repository URL above. For other distros, see [Docker's official install docs](https://docs.docker.com/engine/install/).
+> **Debian users:** Replace `ubuntu` with `debian` in the `URIs` line above. For other distros, see [Docker's official install docs](https://docs.docker.com/engine/install/).
 
 </details>
 
@@ -149,17 +159,17 @@ macOS may have Git pre-installed. Check with `git --version`. If it's not instal
 brew install git
 ```
 
-**3. Install Node.js 22 (LTS)**
+**3. Install Node.js (LTS)**
 
 ```bash
-brew install node@22
+brew install node
 ```
 
-If Homebrew tells you to add it to your PATH, follow those instructions. Then verify:
+This installs the latest Node.js version (v20+ is required). Verify:
 
 ```bash
-node --version   # v22.x.x or higher
-npm --version    # 10.x.x or higher
+node --version   # should print v20.x.x or higher
+npm --version    # should print 10.x.x or higher
 ```
 
 **4. Install Docker Desktop**
@@ -174,8 +184,8 @@ After installation, **open Docker Desktop** from your Applications folder (or Sp
 
 Verify:
 ```bash
-docker --version          # Docker version 27.x.x
-docker compose version    # Docker Compose version v2.x.x
+docker --version          # should print Docker version 2x.x.x
+docker compose version    # should print Docker Compose version v2.x.x
 ```
 
 </details>
@@ -190,9 +200,9 @@ Download and run the Git installer from [git-scm.com/downloads/win](https://git-
 - When asked about the default editor, pick whichever you prefer (Notepad is fine)
 - When asked about adjusting your PATH, choose **"Git from the command line and also from 3rd-party software"** (the recommended option)
 
-**2. Install Node.js 22 (LTS)**
+**2. Install Node.js (LTS)**
 
-Download the Windows installer (`.msi`) from [nodejs.org](https://nodejs.org) — pick the **LTS** version (22.x.x). During installation:
+Download the Windows installer (`.msi`) from [nodejs.org](https://nodejs.org) — click the big **LTS** download button. During installation:
 - Accept the defaults
 - Check the box for **"Automatically install the necessary tools"** if prompted
 
@@ -221,9 +231,9 @@ For all remaining steps, use **Git Bash** (installed with Git) or **PowerShell**
 Verify everything is installed:
 ```bash
 git --version            # git version 2.x.x
-node --version           # v22.x.x
-npm --version            # 10.x.x
-docker --version         # Docker version 27.x.x
+node --version           # v20.x.x or higher
+npm --version            # 10.x.x or higher
+docker --version         # Docker version 2x.x.x
 docker compose version   # Docker Compose version v2.x.x
 ```
 
