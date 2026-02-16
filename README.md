@@ -50,6 +50,7 @@ Most recruiting software holds your candidate data hostage behind per-seat prici
 > git clone https://github.com/applirank/applirank.git && cd applirank
 > cp .env.example .env          # then edit passwords (see below)
 > docker compose up -d           # start Postgres + MinIO
+> docker compose ps              # verify all services are healthy
 > npm install && npm run dev     # app → http://localhost:3000
 > ```
 
@@ -86,11 +87,17 @@ EOF
 sudo apt update
 sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
 
-# 4. Let your user run Docker without sudo (log out & back in after this)
+# 4. Start Docker and enable it on boot
+sudo systemctl start docker
+sudo systemctl enable docker
+
+# 5. Let your user run Docker without sudo (log out & back in after this)
 sudo usermod -aG docker $USER
 ```
 
 > **Debian users:** Replace `ubuntu` with `debian` in the `URIs` line. For other distros see [Docker docs](https://docs.docker.com/engine/install/).
+>
+> **No systemctl?** (containers, WSL1, etc.) Run `sudo dockerd &` to start Docker manually.
 
 </details>
 
@@ -132,9 +139,20 @@ After restarting, open **Docker Desktop** and wait until it says "running". Use 
 ```bash
 git clone https://github.com/applirank/applirank.git
 cd applirank
-cp .env.example .env          # then edit passwords (see below)
-docker compose up -d           # start Postgres + MinIO
-npm install && npm run dev     # app → http://localhost:3000
+cp .env.example .env              # then edit passwords (see below)
+```
+
+Start the infrastructure first and **make sure it's healthy** before launching the app:
+
+```bash
+docker compose up -d              # start Postgres + MinIO
+docker compose ps                 # ← all services should show "running" / "healthy"
+```
+
+Then install and start the app:
+
+```bash
+npm install && npm run dev        # app → http://localhost:3000
 ```
 
 Migrations and S3 bucket creation happen automatically on first run.
