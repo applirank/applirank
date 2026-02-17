@@ -281,6 +281,7 @@ Goal: Ready for real teams to self-host in production.
 - [x] Filename sanitization for all document uploads
 - [x] Docker Compose ports bound to `127.0.0.1` (not exposed to network)
 - [x] Server-proxied document access (no presigned URLs exposed to clients)
+- [x] In-app feedback — floating button in dashboard creates GitHub Issues for bug reports and feature requests, with per-user rate limiting and server-side GitHub PAT (`server/api/feedback.post.ts`, `FeedbackButton.vue`, `FeedbackModal.vue`)
 - [ ] GDPR data export & deletion
 - [ ] Test suite (API + E2E)
 - [ ] CI/CD pipeline

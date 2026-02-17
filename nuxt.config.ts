@@ -11,6 +11,8 @@ export default defineNuxtConfig({
     public: {
       /** When set, the dashboard shows a read-only demo banner for this org slug */
       demoOrgSlug: process.env.DEMO_ORG_SLUG || '',
+      /** Whether in-app feedback via GitHub Issues is enabled */
+      feedbackEnabled: !!(process.env.GITHUB_FEEDBACK_TOKEN && process.env.GITHUB_FEEDBACK_REPO),
     },
   },
 
