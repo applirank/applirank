@@ -12,7 +12,7 @@ const envSchema = z.object({
   /** Use path-style S3 URLs. Required for MinIO (local dev), must be `false` for Railway Buckets / AWS S3. */
   S3_FORCE_PATH_STYLE: z.string().transform(v => v === 'true').default('true'),
   /** IP address of the trusted reverse proxy (e.g., Railway, Cloudflare). When set, X-Forwarded-For is trusted for rate limiting. */
-  TRUSTED_PROXY_IP: z.string().ip().optional(),
+  TRUSTED_PROXY_IP: z.string().min(1).optional(),
   /** Slug of the demo organization. When set, write operations are blocked for this org. */
   DEMO_ORG_SLUG: z.string().optional(),
   /** Fine-grained GitHub PAT with Issues:write scope. When set (along with GITHUB_FEEDBACK_REPO), enables in-app feedback. */
@@ -21,4 +21,17 @@ const envSchema = z.object({
   GITHUB_FEEDBACK_REPO: z.string().regex(/^[^/]+\/[^/]+$/, 'Must be in "owner/repo" format').optional(),
 })
 
-export const env = envSchema.parse(process.env)
+/**
+ * Validated environment variables. Uses lazy initialization so the schema
+ * is only parsed on first access at runtime — not at import time. This
+ * prevents build-time prerendering from failing when env vars aren't
+ * available (e.g., Railway injects variables only at deploy time, not
+ * during the build phase).
+ */
+export const env = new Proxy({} as z.infer<typeof envSchema>, {
+  get(_, prop: string) {
+    // Parse once on first access, then cache for all subsequent reads
+    const parsed = (globalThis as Record<string, unknown>).__env ??= envSchema.parse(process.env)
+    return (parsed as Record<string, unknown>)[prop]
+  },
+})
