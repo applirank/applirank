@@ -42,12 +42,21 @@ const transitionLabels: Record<string, string> = {
 }
 
 const transitionClasses: Record<string, string> = {
-  new: 'border border-surface-300 dark:border-surface-600 text-surface-600 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-800',
-  screening: 'bg-info-600 text-white hover:bg-info-700',
-  interview: 'bg-warning-600 text-white hover:bg-warning-700',
-  offer: 'bg-success-600 text-white hover:bg-success-700',
-  hired: 'bg-success-700 text-white hover:bg-success-800',
-  rejected: 'bg-danger-600 text-white hover:bg-danger-700',
+  new: 'border border-surface-300 dark:border-surface-700 bg-white/80 dark:bg-surface-900 text-surface-700 dark:text-surface-300 hover:border-surface-400 dark:hover:border-surface-600 hover:bg-surface-50 dark:hover:bg-surface-800',
+  screening: 'bg-info-600 text-white shadow-sm shadow-info-900/20 hover:bg-info-700',
+  interview: 'bg-warning-600 text-white shadow-sm shadow-warning-900/20 hover:bg-warning-700',
+  offer: 'bg-success-600 text-white shadow-sm shadow-success-900/20 hover:bg-success-700',
+  hired: 'bg-success-700 text-white shadow-sm shadow-success-900/30 hover:bg-success-800',
+  rejected: 'bg-danger-600 text-white shadow-sm shadow-danger-900/20 hover:bg-danger-700',
+}
+
+const transitionDotClasses: Record<string, string> = {
+  new: 'bg-surface-400 dark:bg-surface-500',
+  screening: 'bg-info-200',
+  interview: 'bg-warning-200',
+  offer: 'bg-success-200',
+  hired: 'bg-success-100',
+  rejected: 'bg-danger-200',
 }
 
 const allowedTransitions = computed(() => {
@@ -118,7 +127,7 @@ function formatResponseValue(value: unknown): string {
     <!-- Back link -->
     <NuxtLink
       to="/dashboard/applications"
-      class="inline-flex items-center gap-1 text-sm text-surface-500 hover:text-surface-700 dark:hover:text-surface-300 mb-6 transition-colors"
+      class="mb-4 inline-flex items-center gap-1 rounded-full border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 px-3 py-1.5 text-sm text-surface-600 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors"
     >
       <ArrowLeft class="size-4" />
       Back to Applications
@@ -141,8 +150,11 @@ function formatResponseValue(value: unknown): string {
     <!-- Application detail -->
     <template v-else-if="application">
       <!-- Header -->
-      <div class="mb-6">
-        <div class="flex items-center gap-3 mb-2">
+      <div class="mb-4 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 p-5">
+        <p class="mb-2 text-xs font-medium uppercase tracking-wide text-surface-500 dark:text-surface-400">
+          Application Overview
+        </p>
+        <div class="mb-2 flex flex-wrap items-center gap-2 text-surface-400">
           <h1 class="text-2xl font-bold text-surface-900 dark:text-surface-50 truncate">
             {{ application.candidate.firstName }} {{ application.candidate.lastName }}
           </h1>
@@ -154,7 +166,7 @@ function formatResponseValue(value: unknown): string {
             {{ application.job.title }}
           </NuxtLink>
         </div>
-        <div class="flex items-center gap-3">
+        <div class="flex flex-wrap items-center gap-3">
           <span
             class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
             :class="statusBadgeClasses[application.status] ?? 'bg-surface-100 text-surface-600'"
@@ -168,112 +180,123 @@ function formatResponseValue(value: unknown): string {
       </div>
 
       <!-- Status transition buttons -->
-      <div v-if="allowedTransitions.length > 0" class="flex flex-wrap items-center gap-2 mb-6">
-        <span class="text-xs font-medium text-surface-500 dark:text-surface-400 mr-1">Move to:</span>
+      <div
+        v-if="allowedTransitions.length > 0"
+        class="mb-6 rounded-xl border border-surface-200 dark:border-surface-800 bg-white/80 dark:bg-surface-900/70 p-3"
+      >
+        <div class="flex flex-wrap items-center gap-2">
+        <span class="inline-flex items-center rounded-full bg-surface-100 dark:bg-surface-800 px-2.5 py-1 text-xs font-medium text-surface-600 dark:text-surface-400">Quick actions</span>
         <button
           v-for="nextStatus in allowedTransitions"
           :key="nextStatus"
           :disabled="isTransitioning"
-          class="rounded-lg px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50"
-          :class="transitionClasses[nextStatus] ?? 'border border-surface-300 text-surface-600 hover:bg-surface-50'"
+          class="inline-flex cursor-pointer items-center rounded-full px-3.5 py-1.5 text-sm font-medium transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-brand-500/40 disabled:cursor-not-allowed disabled:opacity-50"
+          :class="transitionClasses[nextStatus] ?? 'border border-surface-300 dark:border-surface-700 bg-white/80 dark:bg-surface-900 text-surface-700 dark:text-surface-300 hover:border-surface-400 dark:hover:border-surface-600 hover:bg-surface-50 dark:hover:bg-surface-800'"
           @click="handleTransition(nextStatus)"
         >
+          <span
+            class="mr-2 inline-flex size-1.5 rounded-full"
+            :class="transitionDotClasses[nextStatus] ?? 'bg-surface-400 dark:bg-surface-500'"
+          />
           {{ transitionLabels[nextStatus] ?? nextStatus }}
         </button>
+        </div>
       </div>
 
-      <!-- Candidate info -->
-      <div class="rounded-lg border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 p-5 mb-4">
-        <div class="flex items-center gap-2 mb-3">
-          <User class="size-4 text-surface-500 dark:text-surface-400" />
-          <h2 class="text-sm font-semibold text-surface-700 dark:text-surface-200">Candidate</h2>
+      <div class="grid gap-4 md:grid-cols-2">
+        <!-- Candidate info -->
+        <div class="rounded-lg border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 p-5">
+          <div class="flex items-center gap-2 mb-3">
+            <User class="size-4 text-surface-500 dark:text-surface-400" />
+            <h2 class="text-sm font-semibold text-surface-700 dark:text-surface-200">Candidate</h2>
+          </div>
+          <dl class="grid grid-cols-1 gap-3 text-sm">
+            <div>
+              <dt class="text-surface-400">Name</dt>
+              <dd class="text-surface-700 dark:text-surface-200 font-medium">
+                <NuxtLink
+                  :to="`/dashboard/candidates/${application.candidate.id}`"
+                  class="text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 transition-colors"
+                >
+                  {{ application.candidate.firstName }} {{ application.candidate.lastName }}
+                </NuxtLink>
+              </dd>
+            </div>
+            <div>
+              <dt class="text-surface-400">Email</dt>
+              <dd class="text-surface-700 dark:text-surface-200 font-medium">{{ application.candidate.email }}</dd>
+            </div>
+            <div v-if="application.candidate.phone">
+              <dt class="text-surface-400">Phone</dt>
+              <dd class="text-surface-700 dark:text-surface-200 font-medium">{{ application.candidate.phone }}</dd>
+            </div>
+          </dl>
         </div>
-        <dl class="grid grid-cols-2 gap-3 text-sm">
-          <div>
-            <dt class="text-surface-400">Name</dt>
-            <dd class="text-surface-700 dark:text-surface-200 font-medium">
-              <NuxtLink
-                :to="`/dashboard/candidates/${application.candidate.id}`"
-                class="text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 transition-colors"
-              >
-                {{ application.candidate.firstName }} {{ application.candidate.lastName }}
-              </NuxtLink>
-            </dd>
-          </div>
-          <div>
-            <dt class="text-surface-400">Email</dt>
-            <dd class="text-surface-700 dark:text-surface-200 font-medium">{{ application.candidate.email }}</dd>
-          </div>
-          <div v-if="application.candidate.phone">
-            <dt class="text-surface-400">Phone</dt>
-            <dd class="text-surface-700 dark:text-surface-200 font-medium">{{ application.candidate.phone }}</dd>
-          </div>
-        </dl>
-      </div>
 
-      <!-- Job info -->
-      <div class="rounded-lg border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 p-5 mb-4">
-        <div class="flex items-center gap-2 mb-3">
-          <Briefcase class="size-4 text-surface-500 dark:text-surface-400" />
-          <h2 class="text-sm font-semibold text-surface-700 dark:text-surface-200">Job</h2>
+        <!-- Job info -->
+        <div class="rounded-lg border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 p-5">
+          <div class="flex items-center gap-2 mb-3">
+            <Briefcase class="size-4 text-surface-500 dark:text-surface-400" />
+            <h2 class="text-sm font-semibold text-surface-700 dark:text-surface-200">Job</h2>
+          </div>
+          <dl class="grid grid-cols-1 gap-3 text-sm">
+            <div>
+              <dt class="text-surface-400">Title</dt>
+              <dd class="text-surface-700 dark:text-surface-200 font-medium">
+                <NuxtLink
+                  :to="`/dashboard/jobs/${application.job.id}`"
+                  class="text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 transition-colors"
+                >
+                  {{ application.job.title }}
+                </NuxtLink>
+              </dd>
+            </div>
+            <div>
+              <dt class="text-surface-400">Job Status</dt>
+              <dd class="text-surface-700 dark:text-surface-200 font-medium capitalize">{{ application.job.status }}</dd>
+            </div>
+          </dl>
         </div>
-        <dl class="grid grid-cols-2 gap-3 text-sm">
-          <div>
-            <dt class="text-surface-400">Title</dt>
-            <dd class="text-surface-700 dark:text-surface-200 font-medium">
-              <NuxtLink
-                :to="`/dashboard/jobs/${application.job.id}`"
-                class="text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 transition-colors"
-              >
-                {{ application.job.title }}
-              </NuxtLink>
-            </dd>
-          </div>
-          <div>
-            <dt class="text-surface-400">Job Status</dt>
-            <dd class="text-surface-700 dark:text-surface-200 font-medium capitalize">{{ application.job.status }}</dd>
-          </div>
-        </dl>
-      </div>
 
-      <!-- Application details -->
-      <div class="rounded-lg border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 p-5 mb-4">
-        <div class="flex items-center gap-2 mb-3">
-          <Hash class="size-4 text-surface-500 dark:text-surface-400" />
-          <h2 class="text-sm font-semibold text-surface-700 dark:text-surface-200">Details</h2>
+        <!-- Application details -->
+        <div class="rounded-lg border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 p-5 md:col-span-2">
+          <div class="flex items-center gap-2 mb-3">
+            <Hash class="size-4 text-surface-500 dark:text-surface-400" />
+            <h2 class="text-sm font-semibold text-surface-700 dark:text-surface-200">Details</h2>
+          </div>
+          <dl class="grid grid-cols-2 gap-3 text-sm">
+            <div>
+              <dt class="text-surface-400">Score</dt>
+              <dd class="text-surface-700 dark:text-surface-200 font-medium">{{ application.score ?? '—' }}</dd>
+            </div>
+            <div>
+              <dt class="text-surface-400">Status</dt>
+              <dd class="text-surface-700 dark:text-surface-200 font-medium capitalize">{{ application.status }}</dd>
+            </div>
+            <div>
+              <dt class="text-surface-400 inline-flex items-center gap-1">
+                <Calendar class="size-3.5" />
+                Applied
+              </dt>
+              <dd class="text-surface-700 dark:text-surface-200 font-medium">
+                {{ new Date(application.createdAt).toLocaleDateString() }}
+              </dd>
+            </div>
+            <div>
+              <dt class="text-surface-400 inline-flex items-center gap-1">
+                <Clock class="size-3.5" />
+                Updated
+              </dt>
+              <dd class="text-surface-700 dark:text-surface-200 font-medium">
+                {{ new Date(application.updatedAt).toLocaleDateString() }}
+              </dd>
+            </div>
+          </dl>
         </div>
-        <dl class="grid grid-cols-2 gap-3 text-sm">
-          <div>
-            <dt class="text-surface-400">Score</dt>
-            <dd class="text-surface-700 dark:text-surface-200 font-medium">{{ application.score ?? '—' }}</dd>
-          </div>
-          <div>
-            <dt class="text-surface-400">Status</dt>
-            <dd class="text-surface-700 dark:text-surface-200 font-medium capitalize">{{ application.status }}</dd>
-          </div>
-          <div>
-            <dt class="text-surface-400 inline-flex items-center gap-1">
-              <Calendar class="size-3.5" />
-              Applied
-            </dt>
-            <dd class="text-surface-700 dark:text-surface-200 font-medium">
-              {{ new Date(application.createdAt).toLocaleDateString() }}
-            </dd>
-          </div>
-          <div>
-            <dt class="text-surface-400 inline-flex items-center gap-1">
-              <Clock class="size-3.5" />
-              Updated
-            </dt>
-            <dd class="text-surface-700 dark:text-surface-200 font-medium">
-              {{ new Date(application.updatedAt).toLocaleDateString() }}
-            </dd>
-          </div>
-        </dl>
       </div>
 
       <!-- Notes -->
-      <div class="rounded-lg border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 p-5 mb-4">
+      <div class="mt-4 rounded-lg border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 p-5 mb-4">
         <div class="flex items-center justify-between mb-3">
           <div class="flex items-center gap-2">
             <MessageSquare class="size-4 text-surface-500 dark:text-surface-400" />
@@ -281,7 +304,7 @@ function formatResponseValue(value: unknown): string {
           </div>
           <button
             v-if="!isEditingNotes"
-            class="text-xs text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 font-medium transition-colors"
+            class="cursor-pointer text-xs text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 font-medium transition-colors"
             @click="startEditNotes"
           >
             {{ application.notes ? 'Edit' : 'Add Notes' }}
@@ -298,13 +321,13 @@ function formatResponseValue(value: unknown): string {
           <div class="flex items-center gap-2 mt-2">
             <button
               :disabled="isSavingNotes"
-              class="rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50 transition-colors"
+              class="cursor-pointer rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               @click="saveNotes"
             >
               {{ isSavingNotes ? 'Saving…' : 'Save' }}
             </button>
             <button
-              class="rounded-lg border border-surface-300 dark:border-surface-600 px-3 py-1.5 text-sm font-medium text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors"
+              class="cursor-pointer rounded-lg border border-surface-300 dark:border-surface-600 px-3 py-1.5 text-sm font-medium text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors"
               @click="isEditingNotes = false"
             >
               Cancel
