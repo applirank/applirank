@@ -5,6 +5,7 @@
   "scripts": {
     "build": "nuxt build",
     "start": "node .output/server/index.mjs",
+    "start:railway": "npm run db:push && npm run db:seed:pr && node .output/server/index.mjs",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
@@ -13,7 +14,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "db:seed": "npx tsx --env-file=.env server/scripts/seed.ts"
+    "db:seed": "npx tsx --env-file=.env server/scripts/seed.ts",
+    "db:seed:pr": "npx tsx server/scripts/seed-pr.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.990.0",
