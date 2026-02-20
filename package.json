@@ -5,7 +5,7 @@
   "scripts": {
     "build": "nuxt build",
     "start": "node .output/server/index.mjs",
-    "start:railway": "npm run db:migrate && npm run db:seed:pr && node .output/server/index.mjs",
+    "start:railway": "npm run db:push && npm run db:seed:pr && node .output/server/index.mjs",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",

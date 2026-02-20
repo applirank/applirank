@@ -4,6 +4,14 @@ import { db } from '../utils/db'
 export default defineNitroPlugin(async () => {
   // Skip during build-time prerendering — database isn't available
   if (import.meta.prerender) return
+
+  // Railway handles schema sync via preDeploy commands.
+  // Running runtime migrations there can conflict with drizzle-kit push/migrate.
+  if (process.env.RAILWAY_ENVIRONMENT_ID) {
+    console.log('[Applirank] Skipping runtime migrations on Railway (handled in preDeploy)')
+    return
+  }
+
   // Advisory lock ID — prevents concurrent migration runs across instances.
   // The lock is automatically released when the transaction/session ends.
   const MIGRATION_LOCK_ID = 123456789
