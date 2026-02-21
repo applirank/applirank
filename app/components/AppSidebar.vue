@@ -53,6 +53,13 @@ const {
 
 const sidebarJobs = computed(() => sidebarJobsData.value?.data ?? [])
 
+const { data: feedbackConfig } = useFetch('/api/feedback/config', {
+  key: 'feedback-config',
+  headers: useRequestHeaders(['cookie']),
+})
+
+const isFeedbackEnabled = computed(() => feedbackConfig.value?.enabled === true)
+
 const jobTabs = computed(() => {
   if (!activeJobId.value) return []
   const base = `/dashboard/jobs/${activeJobId.value}`
@@ -161,6 +168,7 @@ function isActiveTab(to: string, exact: boolean) {
         <div class="text-xs text-surface-500 dark:text-surface-400 truncate">{{ userEmail }}</div>
       </div>
       <button
+        v-if="isFeedbackEnabled"
         class="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-surface-900 dark:hover:text-surface-100 transition-colors cursor-pointer border-0 bg-transparent w-full text-left"
         @click="showFeedbackModal = true"
       >
