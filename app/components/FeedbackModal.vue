@@ -10,7 +10,7 @@ const feedbackType = ref<'bug' | 'feature'>('bug')
 const title = ref('')
 const description = ref('')
 const currentUrl = ref('')
-const includeReporterContext = ref(false)
+const includeReporterContext = ref(true)
 const includeEmail = ref(false)
 const includeScreenshot = ref(false)
 const includeDiagnostics = ref(true)
@@ -199,7 +199,7 @@ function resetAndClose() {
   submitError.value = ''
   successUrl.value = ''
   feedbackType.value = 'bug'
-  includeReporterContext.value = false
+  includeReporterContext.value = true
   includeEmail.value = false
   includeScreenshot.value = false
   includeDiagnostics.value = true
