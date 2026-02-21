@@ -23,8 +23,11 @@ export function isRailwayPreviewEnvironment(environmentName?: string): boolean {
   if (name === 'production' || name === 'prod') return false
 
   return (
+    name.startsWith('pr')
+    ||
     /^pr(?:-|\d)/.test(name)
     || name.includes('pr-')
+    || name.includes('pr ')
     || name.includes('pull request')
     || name.includes('pull-request')
     || name.includes('preview')
@@ -55,11 +58,11 @@ const envSchema = z
     /** IP address of the trusted reverse proxy (e.g., Railway, Cloudflare). When set, X-Forwarded-For is trusted for rate limiting. */
     TRUSTED_PROXY_IP: z.string().min(1).optional(),
     /** Slug of the demo organization. When set, write operations are blocked for this org. */
-    DEMO_ORG_SLUG: z.string().optional(),
+    DEMO_ORG_SLUG: emptyToUndefined.optional(),
     /** Fine-grained GitHub PAT with Issues:write scope. When set (along with GITHUB_FEEDBACK_REPO), enables in-app feedback. */
-    GITHUB_FEEDBACK_TOKEN: z.string().min(1).optional(),
+    GITHUB_FEEDBACK_TOKEN: emptyToUndefined.pipe(z.string().min(1)).optional(),
     /** GitHub repo in "owner/repo" format for feedback issues. */
-    GITHUB_FEEDBACK_REPO: z.string().regex(/^[^/]+\/[^/]+$/, 'Must be in "owner/repo" format').optional(),
+    GITHUB_FEEDBACK_REPO: emptyToUndefined.pipe(z.string().regex(/^[^/]+\/[^/]+$/, 'Must be in "owner/repo" format')).optional(),
   })
   .superRefine((data, ctx) => {
     const isPreview = isRailwayPreviewEnvironment(data.RAILWAY_ENVIRONMENT_NAME)

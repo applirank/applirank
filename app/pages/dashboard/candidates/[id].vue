@@ -301,14 +301,14 @@ function formatFileSize(bytes: number | null | undefined): string {
 
           <div class="flex items-center gap-2 shrink-0">
             <button
-              class="inline-flex items-center gap-1.5 rounded-lg border border-surface-300 px-3 py-1.5 text-sm font-medium text-surface-700 hover:bg-surface-50 transition-colors"
+              class="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-surface-300 dark:border-surface-700 px-3 py-1.5 text-sm font-medium text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors"
               @click="startEdit"
             >
               <Pencil class="size-3.5" />
               Edit
             </button>
             <button
-              class="inline-flex items-center gap-1.5 rounded-lg border border-danger-300 px-3 py-1.5 text-sm font-medium text-danger-600 hover:bg-danger-50 transition-colors"
+              class="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-danger-300 dark:border-danger-700 px-3 py-1.5 text-sm font-medium text-danger-600 dark:text-danger-400 hover:bg-danger-50 dark:hover:bg-danger-950 transition-colors"
               @click="showDeleteConfirm = true"
             >
               <Trash2 class="size-3.5" />
@@ -630,59 +630,59 @@ function formatFileSize(bytes: number | null | undefined): string {
         <form class="space-y-5" @submit.prevent="handleSave">
           <!-- First Name -->
           <div>
-            <label for="edit-firstName" class="block text-sm font-medium text-surface-700 mb-1">
+            <label for="edit-firstName" class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">
               First Name <span class="text-danger-500">*</span>
             </label>
             <input
               id="edit-firstName"
               v-model="editForm.firstName"
               type="text"
-              class="w-full rounded-lg border px-3 py-2 text-sm text-surface-900 placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-colors"
-              :class="editErrors.firstName ? 'border-danger-300' : 'border-surface-300'"
+              class="w-full rounded-lg border px-3 py-2 text-sm text-surface-900 dark:text-surface-100 bg-white dark:bg-surface-900 placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-colors"
+              :class="editErrors.firstName ? 'border-danger-300' : 'border-surface-300 dark:border-surface-700'"
             />
-            <p v-if="editErrors.firstName" class="mt-1 text-xs text-danger-600">{{ editErrors.firstName }}</p>
+            <p v-if="editErrors.firstName" class="mt-1 text-xs text-danger-600 dark:text-danger-400">{{ editErrors.firstName }}</p>
           </div>
 
           <!-- Last Name -->
           <div>
-            <label for="edit-lastName" class="block text-sm font-medium text-surface-700 mb-1">
+            <label for="edit-lastName" class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">
               Last Name <span class="text-danger-500">*</span>
             </label>
             <input
               id="edit-lastName"
               v-model="editForm.lastName"
               type="text"
-              class="w-full rounded-lg border px-3 py-2 text-sm text-surface-900 placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-colors"
-              :class="editErrors.lastName ? 'border-danger-300' : 'border-surface-300'"
+              class="w-full rounded-lg border px-3 py-2 text-sm text-surface-900 dark:text-surface-100 bg-white dark:bg-surface-900 placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-colors"
+              :class="editErrors.lastName ? 'border-danger-300' : 'border-surface-300 dark:border-surface-700'"
             />
-            <p v-if="editErrors.lastName" class="mt-1 text-xs text-danger-600">{{ editErrors.lastName }}</p>
+            <p v-if="editErrors.lastName" class="mt-1 text-xs text-danger-600 dark:text-danger-400">{{ editErrors.lastName }}</p>
           </div>
 
           <!-- Email -->
           <div>
-            <label for="edit-email" class="block text-sm font-medium text-surface-700 mb-1">
+            <label for="edit-email" class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">
               Email <span class="text-danger-500">*</span>
             </label>
             <input
               id="edit-email"
               v-model="editForm.email"
               type="email"
-              class="w-full rounded-lg border px-3 py-2 text-sm text-surface-900 placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-colors"
-              :class="editErrors.email ? 'border-danger-300' : 'border-surface-300'"
+              class="w-full rounded-lg border px-3 py-2 text-sm text-surface-900 dark:text-surface-100 bg-white dark:bg-surface-900 placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-colors"
+              :class="editErrors.email ? 'border-danger-300' : 'border-surface-300 dark:border-surface-700'"
             />
-            <p v-if="editErrors.email" class="mt-1 text-xs text-danger-600">{{ editErrors.email }}</p>
+            <p v-if="editErrors.email" class="mt-1 text-xs text-danger-600 dark:text-danger-400">{{ editErrors.email }}</p>
           </div>
 
           <!-- Phone -->
           <div>
-            <label for="edit-phone" class="block text-sm font-medium text-surface-700 mb-1">
+            <label for="edit-phone" class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1">
               Phone
             </label>
             <input
               id="edit-phone"
               v-model="editForm.phone"
               type="tel"
-              class="w-full rounded-lg border border-surface-300 px-3 py-2 text-sm text-surface-900 placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-colors"
+              class="w-full rounded-lg border border-surface-300 dark:border-surface-700 px-3 py-2 text-sm text-surface-900 dark:text-surface-100 bg-white dark:bg-surface-900 placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-colors"
             />
           </div>
 
@@ -697,7 +697,7 @@ function formatFileSize(bytes: number | null | undefined): string {
             </button>
             <button
               type="button"
-              class="rounded-lg border border-surface-300 px-4 py-2 text-sm font-medium text-surface-700 hover:bg-surface-50 transition-colors"
+              class="rounded-lg border border-surface-300 dark:border-surface-700 px-4 py-2 text-sm font-medium text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors"
               @click="cancelEdit"
             >
               Cancel

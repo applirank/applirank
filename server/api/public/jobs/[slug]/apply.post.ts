@@ -1,7 +1,8 @@
 import { eq, and, asc } from 'drizzle-orm'
 import { fileTypeFromBuffer } from 'file-type'
-import { job, candidate, application, jobQuestion, questionResponse, document } from '../../../../database/schema'
+import { job, candidate, application, jobQuestion, questionResponse, document, organization } from '../../../../database/schema'
 import { publicApplicationSchema, publicJobSlugSchema } from '../../../../utils/schemas/publicApplication'
+import { createPreviewReadOnlyError } from '../../../../utils/previewReadOnly'
 import {
   ALLOWED_MIME_TYPES,
   MAX_FILE_SIZE,
@@ -139,6 +140,19 @@ export default defineEventHandler(async (event) => {
 
   const orgId = existingJob.organizationId
   const jobId = existingJob.id
+
+  // Demo org is strictly read-only (defense in depth; middleware also blocks this route)
+  if (env.DEMO_ORG_SLUG) {
+    const [demoOrg] = await db
+      .select({ id: organization.id })
+      .from(organization)
+      .where(eq(organization.slug, env.DEMO_ORG_SLUG))
+      .limit(1)
+
+    if (demoOrg?.id === orgId) {
+      throw createPreviewReadOnlyError()
+    }
+  }
 
   // ─────────────────────────────────────────────
   // 3. Fetch questions and validate responses

@@ -8,7 +8,10 @@ let _auth: Auth | undefined
 
 function resolveBetterAuthUrl(): string {
   const explicitUrl = env.BETTER_AUTH_URL?.trim()
-  const isPreview = isRailwayPreviewEnvironment(env.RAILWAY_ENVIRONMENT_NAME)
+  const railwayDomain = env.RAILWAY_PUBLIC_DOMAIN?.trim()
+  const hasPreviewDomain = railwayDomain ? railwayDomain.toLowerCase().includes('-pr-') : false
+  const hasPrNumber = !!env.RAILWAY_GIT_PR_NUMBER?.trim()
+  const isPreview = isRailwayPreviewEnvironment(env.RAILWAY_ENVIRONMENT_NAME) || hasPreviewDomain || hasPrNumber
 
   if (!isPreview) {
     if (!explicitUrl) {
@@ -25,7 +28,6 @@ function resolveBetterAuthUrl(): string {
     return previewUrl
   }
 
-  const railwayDomain = env.RAILWAY_PUBLIC_DOMAIN?.trim()
   if (railwayDomain) {
     const previewUrl = `https://${railwayDomain}`
     console.info(`[Applirank] Using Railway public-domain BETTER_AUTH_URL: ${previewUrl}`)

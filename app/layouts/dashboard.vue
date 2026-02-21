@@ -23,7 +23,7 @@ const isDemo = computed(() => {
       >
         <Eye class="size-4 shrink-0" />
         <span>
-          <strong>Demo mode</strong> — You're exploring with sample data. Changes are disabled.
+          <strong>Preview mode</strong> — You're exploring with sample data in read-only mode. Changes are disabled.
           <a
             href="https://github.com/applirank/applirank"
             target="_blank"
