@@ -87,16 +87,16 @@ jobs:
         run: |
           set -euo pipefail
 
-          npm run dev > dev.log 2>&1 &
+          npm run dev -- --host 0.0.0.0 > dev.log 2>&1 &
           echo $! > dev.pid
 
-          for _ in $(seq 1 90); do
-            if curl -fsS http://127.0.0.1:3000 > /dev/null; then
-              echo "Nuxt dev server is reachable on http://127.0.0.1:3000"
+          for _ in $(seq 90); do
+            if curl -fsS http://localhost:3000 > /dev/null || curl -fsS http://127.0.0.1:3000 > /dev/null; then
+              echo "Nuxt dev server is reachable on http://localhost:3000"
               exit 0
             fi
 
-            if ! kill -0 "$(cat dev.pid)" 2>/dev/null; then
+            if [ -f dev.pid ] && ! kill -0 "$(cat dev.pid)" 2>/dev/null; then
               echo "Nuxt dev server exited before readiness"
               tail -n 200 dev.log || true
               exit 1
