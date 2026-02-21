@@ -10,8 +10,6 @@ const { data: session } = await authClient.useSession(useFetch)
 const isSigningOut = ref(false)
 const { isDark, toggle: toggleColorMode } = useColorMode()
 
-const config = useRuntimeConfig()
-const feedbackEnabled = computed(() => config.public.feedbackEnabled)
 const showFeedbackModal = ref(false)
 
 const userName = computed(() => session.value?.user?.name ?? 'User')
@@ -163,12 +161,11 @@ function isActiveTab(to: string, exact: boolean) {
         <div class="text-xs text-surface-500 dark:text-surface-400 truncate">{{ userEmail }}</div>
       </div>
       <button
-        v-if="feedbackEnabled"
         class="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-surface-900 dark:hover:text-surface-100 transition-colors cursor-pointer border-0 bg-transparent w-full text-left"
         @click="showFeedbackModal = true"
       >
         <MessageSquarePlus class="size-4 shrink-0" />
-        Feedback
+        Report issue (GitHub)
       </button>
       <button
         class="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-surface-900 dark:hover:text-surface-100 transition-colors cursor-pointer border-0 bg-transparent w-full text-left"

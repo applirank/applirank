@@ -25,9 +25,20 @@ setInterval(() => {
 
 /** GitHub issue label mapping by feedback type. */
 const LABEL_MAP = {
-  bug: ['bug'],
-  feature: ['enhancement'],
+  bug: ['bug', 'source:in-app'],
+  feature: ['enhancement', 'source:in-app'],
 } as const
+
+const MAX_GITHUB_ISSUE_BODY_CHARS = 60000
+
+function normalizeSingleLine(value: string): string {
+  return value.replace(/[\r\n]+/g, ' ').trim()
+}
+
+function escapeMarkdownTableValue(value: string): string {
+  return normalizeSingleLine(value)
+    .replace(/\|/g, '\\|')
+}
 
 /**
  * POST /api/feedback
@@ -78,24 +89,94 @@ export default defineEventHandler(async (event) => {
   const typeEmoji = body.type === 'bug' ? '🐛' : '💡'
   const typeLabel = body.type === 'bug' ? 'Bug Report' : 'Feature Request'
 
+  const reporterRows = [
+    ...(body.includeReporterContext ? [`| **Reporter** | ${escapeMarkdownTableValue(userName)} |`] : []),
+    ...(body.includeEmail ? [`| **Email** | ${escapeMarkdownTableValue(userEmail)} |`] : []),
+    ...(body.includeReporterContext && body.currentUrl ? [`| **Page** | ${escapeMarkdownTableValue(body.currentUrl)} |`] : []),
+    `| **Submitted** | ${new Date().toISOString()} |`,
+  ]
+
+  const diagnosticsRows = body.diagnostics
+    ? [
+        `| **User Agent** | ${escapeMarkdownTableValue(body.diagnostics.userAgent ?? 'Not shared')} |`,
+        `| **Language** | ${escapeMarkdownTableValue(body.diagnostics.language ?? 'Not shared')} |`,
+        `| **Platform** | ${escapeMarkdownTableValue(body.diagnostics.platform ?? 'Not shared')} |`,
+        `| **Timezone** | ${escapeMarkdownTableValue(body.diagnostics.timezone ?? 'Not shared')} |`,
+        `| **Viewport** | ${escapeMarkdownTableValue(body.diagnostics.viewport ?? 'Not shared')} |`,
+        `| **Screen** | ${escapeMarkdownTableValue(body.diagnostics.screen ?? 'Not shared')} |`,
+      ]
+    : []
+
+  const screenshotSection =
+    body.includeScreenshot && body.screenshotDataUrl
+      ? [
+          '### Screenshot Context',
+          '',
+          `Filename: ${escapeMarkdownTableValue(body.screenshotFileName ?? 'screenshot.jpg')}`,
+          '',
+          '<details>',
+          '<summary>Screenshot data URL (base64)</summary>',
+          '',
+          '```text',
+          body.screenshotDataUrl,
+          '```',
+          '</details>',
+          '',
+        ]
+      : []
+
   const issueBody = [
     `## ${typeEmoji} ${typeLabel}`,
     '',
+    '### Summary',
+    '',
     body.description,
     '',
+    ...(body.type === 'bug'
+      ? [
+          '### Bug Reproduction',
+          '',
+          `- Steps to reproduce: ${body.bugContext?.stepsToReproduce?.trim() || '_not provided_'}`,
+          `- Expected result: ${body.bugContext?.expectedResult?.trim() || '_not provided_'}`,
+          `- Actual result: ${body.bugContext?.actualResult?.trim() || '_not provided_'}`,
+          '',
+        ]
+      : [
+          '### Feature Context',
+          '',
+          `- User problem: ${body.featureContext?.userProblem?.trim() || '_not provided_'}`,
+          `- Desired workflow: ${body.featureContext?.desiredWorkflow?.trim() || '_not provided_'}`,
+          `- Expected impact: ${body.featureContext?.expectedImpact?.trim() || '_not provided_'}`,
+          '',
+        ]),
+    ...screenshotSection,
     '---',
     '',
     '### Reporter Context',
     '',
     `| Field | Value |`,
     `|-------|-------|`,
-    `| **Reporter** | ${userName} |`,
-    `| **Email** | ${userEmail} |`,
-    ...(body.currentUrl ? [`| **Page** | ${body.currentUrl} |`] : []),
-    `| **Submitted** | ${new Date().toISOString()} |`,
+    ...reporterRows,
+    ...(diagnosticsRows.length > 0
+      ? [
+          '',
+          '### Technical Context',
+          '',
+          `| Field | Value |`,
+          `|-------|-------|`,
+          ...diagnosticsRows,
+        ]
+      : []),
     '',
     '_Submitted via in-app feedback_',
   ].join('\n')
+
+  if (issueBody.length > MAX_GITHUB_ISSUE_BODY_CHARS) {
+    throw createError({
+      statusCode: 413,
+      statusMessage: 'Feedback payload is too large for GitHub issue body. Please reduce screenshot size or context.',
+    })
+  }
 
   // ── Create GitHub Issue ─────────────────────
   const [owner, repo] = env.GITHUB_FEEDBACK_REPO.split('/')

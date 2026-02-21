@@ -6,6 +6,43 @@ import * as schema from '../database/schema'
 type Auth = ReturnType<typeof betterAuth>
 let _auth: Auth | undefined
 
+function resolveBetterAuthUrl(): string {
+  const explicitUrl = env.BETTER_AUTH_URL?.trim()
+  const isPreview = isRailwayPreviewEnvironment(env.RAILWAY_ENVIRONMENT_NAME)
+
+  if (!isPreview) {
+    if (!explicitUrl) {
+      throw new Error('BETTER_AUTH_URL is required outside Railway PR/preview environments')
+    }
+
+    return explicitUrl
+  }
+
+  const prNumber = env.RAILWAY_GIT_PR_NUMBER?.trim()
+  if (prNumber) {
+    const previewUrl = `https://applirank-applirank-pr-${prNumber}.up.railway.app`
+    console.info(`[Applirank] Using Railway PR-derived BETTER_AUTH_URL: ${previewUrl}`)
+    return previewUrl
+  }
+
+  const railwayDomain = env.RAILWAY_PUBLIC_DOMAIN?.trim()
+  if (railwayDomain) {
+    const previewUrl = `https://${railwayDomain}`
+    console.info(`[Applirank] Using Railway public-domain BETTER_AUTH_URL: ${previewUrl}`)
+    return previewUrl
+  }
+
+  if (explicitUrl) {
+    console.info('[Applirank] Using explicit BETTER_AUTH_URL in Railway PR/preview environment')
+    return explicitUrl
+  }
+
+  throw new Error(
+    'Unable to resolve BETTER_AUTH_URL in Railway PR/preview environment. ' +
+    'Set RAILWAY_GIT_PR_NUMBER, RAILWAY_PUBLIC_DOMAIN, or BETTER_AUTH_URL.',
+  )
+}
+
 /**
  * Lazily create the Better Auth instance on first access.
  * Prevents build-time prerendering from crashing when auth env vars
@@ -14,7 +51,7 @@ let _auth: Auth | undefined
 function getAuth(): Auth {
   if (!_auth) {
     _auth = betterAuth({
-      baseURL: env.BETTER_AUTH_URL,
+      baseURL: resolveBetterAuthUrl(),
       database: drizzleAdapter(db, {
         provider: 'pg',
         schema,
