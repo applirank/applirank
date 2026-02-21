@@ -52,12 +52,16 @@ export default defineEventHandler(async (event) => {
 
   // Check if the current session belongs to the demo org
   const session = await auth.api.getSession({ headers: event.headers })
-  if (!session?.session.activeOrganizationId) return
+  const activeOrganizationId = session
+    ? (session.session as { activeOrganizationId?: string }).activeOrganizationId
+    : undefined
+
+  if (!activeOrganizationId) return
 
   const guardedOrgId = await getDemoOrgId()
   if (!guardedOrgId) return
 
-  if (session.session.activeOrganizationId === guardedOrgId) {
+  if (activeOrganizationId === guardedOrgId) {
     throw createError({
       statusCode: 403,
       statusMessage: 'Demo mode — this action is disabled. Deploy your own instance to get full access.',

@@ -87,8 +87,9 @@ async function tryDemo() {
     // Activate the demo org before navigating
     const orgsResult = await authClient.organization.list()
     const orgs = orgsResult.data
-    if (orgs && orgs.length > 0) {
-      await authClient.organization.setActive({ organizationId: orgs[0].id })
+    const firstOrg = orgs?.[0]
+    if (firstOrg) {
+      await authClient.organization.setActive({ organizationId: firstOrg.id })
     }
 
     // Hard navigation to avoid hydration mismatches between dark landing and light dashboard

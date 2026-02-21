@@ -1,4 +1,5 @@
 import { eq } from 'drizzle-orm'
+import { queryCollection } from '@nuxt/content/server'
 import { job } from '../../database/schema'
 
 /**

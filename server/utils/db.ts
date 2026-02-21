@@ -41,7 +41,12 @@ function getDB(): DB {
 export const db: DB = new Proxy({} as DB, {
   get(_, prop) {
     const instance = getDB()
-    const value = (instance as Record<string, unknown>)[prop]
+
+    if (typeof prop !== 'string') {
+      return Reflect.get(instance as object, prop)
+    }
+
+    const value = (instance as unknown as Record<string, unknown>)[prop]
     // Bind methods so they keep the correct `this` context
     return typeof value === 'function' ? value.bind(instance) : value
   },

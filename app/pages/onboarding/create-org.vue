@@ -29,10 +29,13 @@ const autoSwitched = ref(false)
 watch([orgs, isOrgsLoading], async ([orgList, loading]) => {
   if (loading || autoSwitched.value || showCreateForm.value) return
   if (orgList.length === 1) {
+    const firstOrg = orgList[0]
+    if (!firstOrg) return
+
     autoSwitched.value = true
     isLoading.value = true
     try {
-      await switchOrg(orgList[0].id)
+      await switchOrg(firstOrg.id)
     }
     catch {
       isLoading.value = false

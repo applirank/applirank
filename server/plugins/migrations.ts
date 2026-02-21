@@ -18,9 +18,10 @@ export default defineNitroPlugin(async () => {
 
   try {
     // pg_try_advisory_lock returns true if lock acquired, false if another process holds it
-    const [{ locked }] = await db.execute<{ locked: boolean }>(
+    const lockResult = await db.execute<{ locked: boolean }>(
       `SELECT pg_try_advisory_lock(${MIGRATION_LOCK_ID}) as locked`
     )
+    const locked = lockResult[0]?.locked ?? false
 
     if (!locked) {
       console.log('[Applirank] Another instance is running migrations, skipping')
