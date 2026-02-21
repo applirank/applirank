@@ -6,6 +6,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com). Categories: **Add
 
 ---
 
+## 2026-02-21
+
+### Fixed
+
+- **Dependency security remediation** — resolved all `npm audit --audit-level=high` findings by upgrading `@aws-sdk/client-s3` (pulling patched `@aws-sdk/xml-builder`) and regenerating lockfile resolution
+- **Transitive vulnerability pinning** — added npm `overrides` for `fast-xml-parser`, `minimatch`, `tar`, and `readdir-glob` to keep vulnerable transitive ranges out of the install graph
+
+### Changed
+
+- **Lockfile hygiene** — refreshed dependency graph with `npm install` + `npm dedupe` to remove stale vulnerable transitive entries
+
+---
+
 ## 2026-02-19
 
 ### Changed
