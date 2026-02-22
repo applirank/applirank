@@ -55,7 +55,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       /** When set, the dashboard shows a read-only demo banner for this org slug */
-      demoOrgSlug: process.env.DEMO_ORG_SLUG || '',
+      demoOrgSlug: process.env.DEMO_ORG_SLUG || (isRailwayPreview ? 'applirank-pr-demo' : ''),
       /** Public live-demo account email used to prefill sign-in */
       liveDemoEmail:
         process.env.LIVE_DEMO_EMAIL

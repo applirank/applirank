@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm'
 import * as schema from '../database/schema'
 import { createPreviewReadOnlyError } from '../utils/previewReadOnly'
+import { isRailwayPreviewEnvironment } from '../utils/env'
 
 /**
  * Demo guard middleware — blocks write operations (POST, PATCH, PUT, DELETE)
@@ -15,7 +16,8 @@ import { createPreviewReadOnlyError } from '../utils/previewReadOnly'
 // We only cache successful resolutions to avoid sticky null-state if
 // the org is created after server startup.
 // ─────────────────────────────────────────────
-let demoOrgId: string | null = null
+const demoOrgIds = new Map<string, string>()
+const DEFAULT_PR_DEMO_ORG_SLUG = 'applirank-pr-demo'
 
 const PUBLIC_APPLY_PATH_REGEX = /^\/api\/public\/jobs\/([^/]+)\/apply\/?$/
 
@@ -23,26 +25,45 @@ function throwDemoReadOnlyError(): never {
   throw createPreviewReadOnlyError()
 }
 
-async function getDemoOrgId(): Promise<string | null> {
-  if (demoOrgId) return demoOrgId
+function getConfiguredDemoSlugs(): string[] {
+  const slugs = new Set<string>()
 
-  const slug = env.DEMO_ORG_SLUG
-  if (!slug) {
-    return null
+  if (env.DEMO_ORG_SLUG) {
+    slugs.add(env.DEMO_ORG_SLUG)
   }
 
-  const [org] = await db
-    .select({ id: schema.organization.id })
-    .from(schema.organization)
-    .where(eq(schema.organization.slug, slug))
-    .limit(1)
-
-  if (!org?.id) {
-    return null
+  if (isRailwayPreviewEnvironment(env.RAILWAY_ENVIRONMENT_NAME)) {
+    slugs.add(DEFAULT_PR_DEMO_ORG_SLUG)
   }
 
-  demoOrgId = org.id
-  return demoOrgId
+  return [...slugs]
+}
+
+async function getDemoOrgIds(slugs: string[]): Promise<Set<string>> {
+  const ids = new Set<string>()
+
+  for (const slug of slugs) {
+    const cached = demoOrgIds.get(slug)
+    if (cached) {
+      ids.add(cached)
+      continue
+    }
+
+    const [org] = await db
+      .select({ id: schema.organization.id })
+      .from(schema.organization)
+      .where(eq(schema.organization.slug, slug))
+      .limit(1)
+
+    if (!org?.id) {
+      continue
+    }
+
+    demoOrgIds.set(slug, org.id)
+    ids.add(org.id)
+  }
+
+  return ids
 }
 
 const WRITE_METHODS = new Set(['POST', 'PATCH', 'PUT', 'DELETE'])
@@ -56,14 +77,14 @@ export default defineEventHandler(async (event) => {
   // Always allow auth routes (sign-in, sign-out, session, org switch)
   if (path.startsWith('/api/auth/')) return
 
-  // Skip if no demo slug configured
-  if (!env.DEMO_ORG_SLUG) return
+  const demoSlugs = getConfiguredDemoSlugs()
+  if (demoSlugs.length === 0) return
 
   // Only guard write operations
   if (!WRITE_METHODS.has(event.method)) return
 
-  const guardedOrgId = await getDemoOrgId()
-  if (!guardedOrgId) {
+  const guardedOrgIds = await getDemoOrgIds(demoSlugs)
+  if (guardedOrgIds.size === 0) {
     if (import.meta.dev) return
 
     throw createError({
@@ -71,7 +92,7 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'Demo mode is misconfigured. Please contact support.',
       data: {
         code: 'DEMO_GUARD_MISCONFIGURED',
-        message: 'DEMO_ORG_SLUG is set but could not be resolved to an organization.',
+        message: `None of the configured demo slugs could be resolved: ${demoSlugs.join(', ')}`,
       },
     })
   }
@@ -88,7 +109,7 @@ export default defineEventHandler(async (event) => {
       .where(eq(schema.job.slug, slug))
       .limit(1)
 
-    if (targetJob?.organizationId === guardedOrgId) {
+    if (targetJob?.organizationId && guardedOrgIds.has(targetJob.organizationId)) {
       throwDemoReadOnlyError()
     }
     return
@@ -102,7 +123,7 @@ export default defineEventHandler(async (event) => {
 
   if (!activeOrganizationId) return
 
-  if (activeOrganizationId === guardedOrgId) {
+  if (guardedOrgIds.has(activeOrganizationId)) {
     throwDemoReadOnlyError()
   }
 })
