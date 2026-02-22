@@ -8,6 +8,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com). Categories: **Add
 
 ## 2026-02-22
 
+### Fixed
+
+- **Railway PR seed execution** — removed hard `.env` dependency from `db:seed`; seeding now works with platform-injected env vars and still supports local `.env` loading in `seed.ts`
+
 ### Changed
 
 - **Unified Railway seeding path** — Railway predeploy now runs `db:seed` (same script as standard demo data), removing PR-specific seed divergence between preview and production-like environments

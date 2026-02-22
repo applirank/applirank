@@ -26,6 +26,19 @@ import * as schema from '../database/schema'
 // Config
 // ─────────────────────────────────────────────
 
+const processWithLoadEnv = process as NodeJS.Process & {
+  loadEnvFile?: (path?: string) => void
+}
+
+if (!process.env.DATABASE_URL && typeof processWithLoadEnv.loadEnvFile === 'function') {
+  try {
+    processWithLoadEnv.loadEnvFile('.env')
+  }
+  catch {
+    // .env is optional in hosted environments like Railway
+  }
+}
+
 const DATABASE_URL = process.env.DATABASE_URL
 if (!DATABASE_URL) {
   console.error('DATABASE_URL is required. Set it in .env or export it.')

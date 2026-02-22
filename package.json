@@ -14,7 +14,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "db:seed": "npx tsx --env-file=.env server/scripts/seed.ts"
+    "db:seed": "npx tsx server/scripts/seed.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.995.0",
