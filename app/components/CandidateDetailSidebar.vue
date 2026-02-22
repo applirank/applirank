@@ -16,7 +16,7 @@ const emit = defineEmits<{
   (e: 'updated'): void
 }>()
 
-const { withPreviewReadOnly, handlePreviewReadOnlyError } = usePreviewReadOnly()
+const { handlePreviewReadOnlyError } = usePreviewReadOnly()
 
 // ─────────────────────────────────────────────
 // Tabs
@@ -110,12 +110,10 @@ const isTransitioning = ref(false)
 async function handleTransition(newStatus: string) {
   isTransitioning.value = true
   try {
-    await withPreviewReadOnly(() =>
-      $fetch(`/api/applications/${props.applicationId}`, {
-        method: 'PATCH',
-        body: { status: newStatus },
-      }),
-    )
+    await $fetch(`/api/applications/${props.applicationId}`, {
+      method: 'PATCH',
+      body: { status: newStatus },
+    })
     await refresh()
     emit('updated')
   } catch (err: any) {
@@ -142,12 +140,10 @@ function startEditNotes() {
 async function saveNotes() {
   isSavingNotes.value = true
   try {
-    await withPreviewReadOnly(() =>
-      $fetch(`/api/applications/${props.applicationId}`, {
-        method: 'PATCH',
-        body: { notes: notesInput.value || null },
-      }),
-    )
+    await $fetch(`/api/applications/${props.applicationId}`, {
+      method: 'PATCH',
+      body: { notes: notesInput.value || null },
+    })
     await refresh()
     emit('updated')
     isEditingNotes.value = false
@@ -252,7 +248,7 @@ async function handleDeleteDoc(docId: string) {
   if (!candidateId.value) return
   isDeletingDoc.value = true
   try {
-    await withPreviewReadOnly(() => deleteDocument(docId, candidateId.value!))
+    await deleteDocument(docId, candidateId.value)
     await refreshCandidate()
     showDocDeleteConfirm.value = null
   } catch (err: any) {

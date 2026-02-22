@@ -5,7 +5,7 @@ import type { MaybeRefOrGetter } from 'vue'
  * Wraps `useFetch('/api/jobs/:id')` with a reactive key.
  */
 export function useJob(id: MaybeRefOrGetter<string>) {
-  const { withPreviewReadOnly } = usePreviewReadOnly()
+  const { handlePreviewReadOnlyError } = usePreviewReadOnly()
   const jobId = computed(() => toValue(id))
 
   const { data: job, status, error, refresh } = useFetch(
@@ -24,20 +24,28 @@ export function useJob(id: MaybeRefOrGetter<string>) {
     type: 'full_time' | 'part_time' | 'contract' | 'internship'
     status: 'draft' | 'open' | 'closed' | 'archived'
   }>) {
-    const updated = await withPreviewReadOnly(() =>
-      $fetch(`/api/jobs/${jobId.value}`, {
+    try {
+      const updated = await $fetch(`/api/jobs/${jobId.value}`, {
         method: 'PATCH',
         body: payload,
-      }),
-    )
-    await refresh()
-    await refreshNuxtData('jobs')
-    return updated
+      })
+      await refresh()
+      await refreshNuxtData('jobs')
+      return updated
+    } catch (error) {
+      handlePreviewReadOnlyError(error)
+      throw error
+    }
   }
 
   /** Delete this job and navigate back to the list */
   async function deleteJob() {
-    await withPreviewReadOnly(() => $fetch(`/api/jobs/${jobId.value}`, { method: 'DELETE' }))
+    try {
+      await $fetch(`/api/jobs/${jobId.value}`, { method: 'DELETE' })
+    } catch (error) {
+      handlePreviewReadOnlyError(error)
+      throw error
+    }
     await refreshNuxtData('jobs')
     await navigateTo('/dashboard/jobs')
   }

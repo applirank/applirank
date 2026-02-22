@@ -8,7 +8,7 @@ import { usePreviewReadOnly } from '~/composables/usePreviewReadOnly'
  * data cache so the document list updates automatically.
  */
 export function useDocuments() {
-  const { withPreviewReadOnly } = usePreviewReadOnly()
+  const { handlePreviewReadOnlyError } = usePreviewReadOnly()
 
   /**
    * Upload a document for a candidate.
@@ -27,13 +27,18 @@ export function useDocuments() {
     const formData = new FormData()
     formData.append('file', file)
     formData.append('type', type)
+    const endpoint = `/api/candidates/${candidateId}/documents` as string
 
-    const result = await withPreviewReadOnly(() =>
-      $fetch(`/api/candidates/${candidateId}/documents`, {
+    let result: unknown
+    try {
+      result = await $fetch(endpoint, {
         method: 'POST',
         body: formData,
-      }),
-    )
+      })
+    } catch (error) {
+      handlePreviewReadOnlyError(error)
+      throw error
+    }
 
     // Refresh the candidate detail cache so the document list updates
     await refreshNuxtData(`candidate-${candidateId}`)
@@ -72,7 +77,13 @@ export function useDocuments() {
    * @param candidateId - The owning candidate (used to refresh the cache)
    */
   async function deleteDocument(documentId: string, candidateId: string) {
-    await withPreviewReadOnly(() => $fetch(`/api/documents/${documentId}`, { method: 'DELETE' }))
+    const endpoint = `/api/documents/${documentId}` as string
+    try {
+      await $fetch(endpoint, { method: 'DELETE' })
+    } catch (error) {
+      handlePreviewReadOnlyError(error)
+      throw error
+    }
     await refreshNuxtData(`candidate-${candidateId}`)
   }
 

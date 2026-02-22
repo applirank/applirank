@@ -19,7 +19,7 @@ const { data: jobData, status: jobFetchStatus } = useFetch('/api/jobs', {
 })
 
 const jobs = computed(() => jobData.value?.data ?? [])
-const { withPreviewReadOnly, handlePreviewReadOnlyError } = usePreviewReadOnly()
+const { handlePreviewReadOnlyError } = usePreviewReadOnly()
 
 // Apply to job
 const isApplying = ref(false)
@@ -29,12 +29,10 @@ async function applyToJob(jobId: string) {
   isApplying.value = true
   applyError.value = ''
   try {
-    await withPreviewReadOnly(() =>
-      $fetch('/api/applications', {
-        method: 'POST',
-        body: { candidateId: props.candidateId, jobId },
-      }),
-    )
+    await $fetch('/api/applications', {
+      method: 'POST',
+      body: { candidateId: props.candidateId, jobId },
+    })
     emit('created')
   } catch (err: any) {
     if (handlePreviewReadOnlyError(err)) return

@@ -7,7 +7,7 @@ import type { Ref } from 'vue'
 export function useJobs(options?: {
   status?: Ref<string | undefined> | string
 }) {
-  const { withPreviewReadOnly } = usePreviewReadOnly()
+  const { handlePreviewReadOnlyError } = usePreviewReadOnly()
 
   const query = computed(() => ({
     ...(toValue(options?.status) && { status: toValue(options?.status) }),
@@ -29,19 +29,27 @@ export function useJobs(options?: {
     location?: string
     type?: 'full_time' | 'part_time' | 'contract' | 'internship'
   }) {
-    const created = await withPreviewReadOnly(() =>
-      $fetch('/api/jobs', {
+    try {
+      const created = await $fetch('/api/jobs', {
         method: 'POST',
         body: payload,
-      }),
-    )
-    await refresh()
-    return created
+      })
+      await refresh()
+      return created
+    } catch (error) {
+      handlePreviewReadOnlyError(error)
+      throw error
+    }
   }
 
   /** Delete a job by ID and refresh the list */
   async function deleteJob(id: string) {
-    await withPreviewReadOnly(() => $fetch(`/api/jobs/${id}`, { method: 'DELETE' }))
+    try {
+      await $fetch(`/api/jobs/${id}`, { method: 'DELETE' })
+    } catch (error) {
+      handlePreviewReadOnlyError(error)
+      throw error
+    }
     await refresh()
   }
 

@@ -238,7 +238,7 @@ function setFocusStatus(status: PipelineStatus) {
 }
 
 const isMutating = ref(false)
-const { withPreviewReadOnly, handlePreviewReadOnlyError } = usePreviewReadOnly()
+const { handlePreviewReadOnlyError } = usePreviewReadOnly()
 
 async function changeStatus(status: string) {
   if (!currentSummary.value || isMutating.value) return
@@ -248,12 +248,10 @@ async function changeStatus(status: string) {
   const nextIndex = Math.min(currentIndex.value + 1, Math.max(focusedApplications.value.length - 1, 0))
 
   try {
-    await withPreviewReadOnly(() =>
-      $fetch(`/api/applications/${applicationId}`, {
-        method: 'PATCH',
-        body: { status },
-      }),
-    )
+    await $fetch(`/api/applications/${applicationId}`, {
+      method: 'PATCH',
+      body: { status },
+    })
 
     await refreshApps()
 

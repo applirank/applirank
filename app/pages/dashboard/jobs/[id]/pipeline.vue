@@ -73,17 +73,15 @@ const columnHeaderClasses: Record<string, string> = {
 // ─────────────────────────────────────────────
 
 const transitioningId = ref<string | null>(null)
-const { withPreviewReadOnly, handlePreviewReadOnlyError } = usePreviewReadOnly()
+const { handlePreviewReadOnlyError } = usePreviewReadOnly()
 
 async function handleTransition(appId: string, newStatus: string) {
   transitioningId.value = appId
   try {
-    await withPreviewReadOnly(() =>
-      $fetch(`/api/applications/${appId}`, {
-        method: 'PATCH',
-        body: { status: newStatus },
-      }),
-    )
+    await $fetch(`/api/applications/${appId}`, {
+      method: 'PATCH',
+      body: { status: newStatus },
+    })
     await refreshApps()
   } catch (err: any) {
     if (handlePreviewReadOnlyError(err)) return

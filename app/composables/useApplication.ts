@@ -5,7 +5,7 @@ import type { MaybeRefOrGetter } from 'vue'
  * Wraps `useFetch('/api/applications/:id')` with a reactive key.
  */
 export function useApplication(id: MaybeRefOrGetter<string>) {
-  const { withPreviewReadOnly } = usePreviewReadOnly()
+  const { handlePreviewReadOnlyError } = usePreviewReadOnly()
   const applicationId = computed(() => toValue(id))
 
   const { data: application, status, error, refresh } = useFetch(
@@ -22,15 +22,18 @@ export function useApplication(id: MaybeRefOrGetter<string>) {
     notes: string | null
     score: number | null
   }>) {
-    const updated = await withPreviewReadOnly(() =>
-      $fetch(`/api/applications/${applicationId.value}`, {
+    try {
+      const updated = await $fetch(`/api/applications/${applicationId.value}`, {
         method: 'PATCH',
         body: payload,
-      }),
-    )
-    await refresh()
-    await refreshNuxtData('applications')
-    return updated
+      })
+      await refresh()
+      await refreshNuxtData('applications')
+      return updated
+    } catch (error) {
+      handlePreviewReadOnlyError(error)
+      throw error
+    }
   }
 
   return { application, status, error, refresh, updateApplication }
