@@ -62,8 +62,9 @@ const total = computed(() => data.value?.total ?? 0)
 const totalPages = computed(() => Math.ceil(total.value / 20))
 
 // ─────────────────────────────────────────────
-// Display helpers
+// i18n-aware display helpers
 // ─────────────────────────────────────────────
+const { locale } = useI18n()
 
 const typeLabels: Record<string, string> = {
   full_time: 'Full-time',
@@ -81,7 +82,7 @@ const typeOptions = [
 ] as const
 
 function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString('en-US', {
+  return new Date(dateStr).toLocaleDateString(locale.value, {
     month: 'short',
     day: 'numeric',
     year: 'numeric',

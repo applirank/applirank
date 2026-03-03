@@ -14,8 +14,8 @@ import { document } from '../../database/schema'
  *     (orphaned S3 objects are less harmful than orphaned DB records)
  */
 export default defineEventHandler(async (event) => {
-  const session = await requireAuth(event)
-  const orgId = session.session.activeOrganizationId!
+  const session = await requirePermission(event, { document: ['delete'] })
+  const orgId = session.session.activeOrganizationId
 
   const documentId = getRouterParam(event, 'id')
   if (!documentId) {
@@ -52,6 +52,14 @@ export default defineEventHandler(async (event) => {
       eq(document.id, doc.id),
       eq(document.organizationId, orgId),
     ))
+
+  recordActivity({
+    organizationId: orgId,
+    actorId: session.user.id,
+    action: 'deleted',
+    resourceType: 'document',
+    resourceId: doc.id,
+  })
 
   setResponseStatus(event, 204)
   return null

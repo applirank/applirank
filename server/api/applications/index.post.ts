@@ -8,8 +8,8 @@ import { createApplicationSchema } from '../../utils/schemas/application'
  * Both candidate and job must belong to the session's organization.
  */
 export default defineEventHandler(async (event) => {
-  const session = await requireAuth(event)
-  const orgId = session.session.activeOrganizationId!
+  const session = await requirePermission(event, { application: ['create'] })
+  const orgId = session.session.activeOrganizationId
 
   const body = await readValidatedBody(event, createApplicationSchema.parse)
 
@@ -65,6 +65,19 @@ export default defineEventHandler(async (event) => {
     notes: application.notes,
     createdAt: application.createdAt,
     updatedAt: application.updatedAt,
+  })
+
+  if (!created) {
+    throw createError({ statusCode: 500, statusMessage: 'Failed to create application' })
+  }
+
+  recordActivity({
+    organizationId: orgId,
+    actorId: session.user.id,
+    action: 'created',
+    resourceType: 'application',
+    resourceId: created.id,
+    metadata: { candidateId: body.candidateId, jobId: body.jobId },
   })
 
   setResponseStatus(event, 201)

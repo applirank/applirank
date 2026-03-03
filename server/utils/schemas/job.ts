@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+export { JOB_STATUS_TRANSITIONS } from '~~/shared/status-transitions'
+
 // ─────────────────────────────────────────────
 // Job validation schemas — shared across API routes
 // ─────────────────────────────────────────────
@@ -40,17 +42,5 @@ export const idParamSchema = z.object({
   id: z.string().min(1),
 })
 
-// ─────────────────────────────────────────────
-// Status transition rules
-// ─────────────────────────────────────────────
-
-/**
- * Allowed status transitions for jobs.
- * `archived` is terminal — no transitions allowed from it.
- */
-export const JOB_STATUS_TRANSITIONS: Record<string, string[]> = {
-  draft: ['open', 'archived'],
-  open: ['closed', 'archived'],
-  closed: ['open', 'archived'],
-  archived: ['draft', 'open'],
-}
+// Status transition rules are now in shared/status-transitions.ts
+// and re-exported above for backward compatibility.

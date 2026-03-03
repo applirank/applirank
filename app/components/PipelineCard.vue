@@ -36,7 +36,7 @@ const transitionClasses: Record<string, string> = {
 </script>
 
 <template>
-  <div class="rounded-lg border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 p-3 shadow-sm">
+  <div class="rounded-xl border border-surface-200/80 dark:border-surface-800/60 bg-white dark:bg-surface-900 p-3 shadow-sm shadow-surface-900/[0.03] dark:shadow-none">
     <NuxtLink
       :to="$localePath(`/dashboard/applications/${id}`)"
       class="block mb-2 group"
@@ -57,13 +57,13 @@ const transitionClasses: Record<string, string> = {
         <Calendar class="size-3" />
         {{ new Date(createdAt).toLocaleDateString() }}
       </span>
-      <span v-if="score != null" class="font-medium text-surface-600 dark:text-surface-300">
+      <span v-if="score != null" class="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-semibold ring-1 ring-inset bg-surface-50 text-surface-600 ring-surface-200 dark:bg-surface-800/60 dark:text-surface-300 dark:ring-surface-700">
         {{ score }}pts
       </span>
     </div>
 
     <!-- Transition buttons -->
-    <div v-if="allowedTransitions.length > 0" class="flex flex-wrap gap-1 mt-2 pt-2 border-t border-surface-100 dark:border-surface-800">
+    <div v-if="allowedTransitions.length > 0" class="flex flex-wrap gap-1 mt-2 pt-2 border-t border-surface-100 dark:border-surface-800/60">
       <button
         v-for="nextStatus in allowedTransitions"
         :key="nextStatus"

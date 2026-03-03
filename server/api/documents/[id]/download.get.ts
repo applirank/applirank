@@ -18,8 +18,8 @@ import { document } from '../../../database/schema'
  *   - Cache-Control: no-store prevents caching of sensitive documents
  */
 export default defineEventHandler(async (event) => {
-  const session = await requireAuth(event)
-  const orgId = session.session.activeOrganizationId!
+  const session = await requirePermission(event, { document: ['read'] })
+  const orgId = session.session.activeOrganizationId
 
   const documentId = getRouterParam(event, 'id')
   if (!documentId) {

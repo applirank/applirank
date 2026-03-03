@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import {
-  LayoutDashboard, Briefcase, Users, Inbox,
-  ChevronLeft, Eye, Kanban, FileText, LogOut, Table2, Hand,
-  Sun, Moon, MessageSquarePlus,
+  Briefcase, Plus, Bell,
+  ChevronLeft, Kanban, FileText, LogOut, Table2,
+  Sun, Moon, MessageSquarePlus, Settings,
 } from 'lucide-vue-next'
 
 const route = useRoute()
@@ -23,13 +23,6 @@ async function handleSignOut() {
   clearNuxtData()
   await navigateTo(localePath('/auth/sign-in'))
 }
-
-const navItems = [
-  { label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard, exact: true },
-  { label: 'Jobs', to: '/dashboard/jobs', icon: Briefcase, exact: false },
-  { label: 'Candidates', to: '/dashboard/candidates', icon: Users, exact: false },
-  { label: 'Applications', to: '/dashboard/applications', icon: Inbox, exact: false },
-]
 
 // ─────────────────────────────────────────────
 // Dynamic job context — detect when viewing a specific job
@@ -58,6 +51,23 @@ const {
 
 const sidebarJobs = computed(() => sidebarJobsData.value?.data ?? [])
 
+// Active jobs sorted by urgency (most new applications first)
+const activeJobsSorted = computed(() => {
+  return [...sidebarJobs.value].sort((a, b) => {
+    const aNew = a.pipeline?.new ?? 0
+    const bNew = b.pipeline?.new ?? 0
+    if (aNew !== bNew) return bNew - aNew
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  })
+})
+
+// Currently-viewed job title (for context header)
+const activeJobTitle = computed(() => {
+  if (!activeJobId.value) return null
+  const found = sidebarJobs.value.find((j: any) => j.id === activeJobId.value)
+  return found?.title ?? 'Job'
+})
+
 const { data: feedbackConfig } = useFetch('/api/feedback/config', {
   key: 'feedback-config',
   headers: useRequestHeaders(['cookie']),
@@ -69,10 +79,8 @@ const jobTabs = computed(() => {
   if (!activeJobId.value) return []
   const base = `/dashboard/jobs/${activeJobId.value}`
   return [
-    { label: 'Overview', to: base, icon: Eye, exact: true },
-    { label: 'Pipeline', to: `${base}/pipeline`, icon: Kanban, exact: true },
-    { label: 'Swipe', to: `${base}/swipe`, icon: Hand, exact: true },
-    { label: 'Candidates', to: `${base}/candidates`, icon: Table2, exact: true },
+    { label: 'Pipeline', to: base, icon: Kanban, exact: true },
+    { label: 'Table', to: `${base}/candidates`, icon: Table2, exact: true },
     { label: 'Application Form', to: `${base}/application-form`, icon: FileText, exact: true },
   ]
 })
@@ -89,7 +97,7 @@ function isActiveTab(to: string, exact: boolean) {
     class="sticky top-0 self-start flex h-screen max-h-screen flex-col justify-between w-60 min-w-60 bg-white dark:bg-surface-900 border-r border-surface-200 dark:border-surface-800 py-5 px-3 overflow-y-auto"
   >
     <!-- Top -->
-    <div class="flex flex-col gap-5">
+    <div class="flex flex-col gap-4">
       <!-- Logo -->
       <NuxtLink :to="$localePath('/')" class="flex items-center gap-2 px-2 no-underline">
         <img src="/eagle-mascot-logo.png" alt="Reqcore mascot" class="size-7 shrink-0 object-contain" />
@@ -105,57 +113,34 @@ function isActiveTab(to: string, exact: boolean) {
         <OrgSwitcher />
       </div>
 
-      <!-- Main navigation -->
-      <nav class="flex flex-col gap-0.5">
-        <NuxtLink
-          v-for="item in navItems"
-          :key="item.to"
-          :to="$localePath(item.to)"
-          class="flex items-center gap-2.5 px-3 py-2 rounded-md text-sm text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-surface-900 dark:hover:text-surface-100 transition-colors no-underline"
-          :class="isActiveTab(item.to, item.exact)
-            ? 'bg-surface-100 dark:bg-surface-800 text-surface-900 dark:text-surface-100 font-medium'
-            : ''"
-        >
-          <component :is="item.icon" class="size-4 shrink-0" />
-          {{ item.label }}
-        </NuxtLink>
-      </nav>
+      <!-- New Job button -->
+      <NuxtLink
+        :to="$localePath('/dashboard/jobs/new')"
+        class="flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-3 py-2 text-sm font-medium text-white hover:bg-brand-700 transition-colors no-underline"
+      >
+        <Plus class="size-4" />
+        New Job
+      </NuxtLink>
 
       <!-- Job context sub-nav (when viewing a specific job) -->
-      <div v-if="showJobsList" class="border-t border-surface-200 dark:border-surface-800 pt-4">
-        <div class="px-3 pb-2 text-xs font-medium uppercase tracking-wide text-surface-500 dark:text-surface-400">
-          Jobs
-        </div>
-
-        <div v-if="sidebarJobsStatus === 'pending'" class="px-3 py-2 text-xs text-surface-400">
-          Loading jobs…
-        </div>
-
-        <nav v-else class="flex max-h-56 flex-col gap-0.5 overflow-y-auto">
-          <NuxtLink
-            v-for="job in sidebarJobs"
-            :key="job.id"
-            :to="$localePath(`/dashboard/jobs/${job.id}`)"
-            class="px-3 py-2 rounded-md text-sm text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-surface-900 dark:hover:text-surface-100 transition-colors no-underline truncate"
-            :title="job.title"
-          >
-            {{ job.title }}
-          </NuxtLink>
-
-          <div v-if="sidebarJobs.length === 0" class="px-3 py-2 text-xs text-surface-400">
-            No jobs yet
-          </div>
-        </nav>
-      </div>
-
-      <div v-if="activeJobId" class="border-t border-surface-200 dark:border-surface-800 pt-4">
+      <div v-if="activeJobId" class="border-t border-surface-200 dark:border-surface-800 pt-3">
         <NuxtLink
-          :to="$localePath('/dashboard/jobs')"
+          :to="$localePath('/dashboard')"
           class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-surface-500 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-200 transition-colors no-underline mb-2"
         >
           <ChevronLeft class="size-3.5" />
           All Jobs
         </NuxtLink>
+
+        <!-- Active job title -->
+        <div class="px-3 pb-2">
+          <div class="flex items-center gap-2">
+            <Briefcase class="size-3.5 text-brand-500 shrink-0" />
+            <span class="text-sm font-semibold text-surface-900 dark:text-surface-100 truncate">
+              {{ activeJobTitle }}
+            </span>
+          </div>
+        </div>
 
         <nav class="flex flex-col gap-0.5">
           <NuxtLink
@@ -171,6 +156,53 @@ function isActiveTab(to: string, exact: boolean) {
             {{ tab.label }}
           </NuxtLink>
         </nav>
+      </div>
+
+      <!-- Jobs list (when not viewing a specific job) -->
+      <div v-if="showJobsList" class="border-t border-surface-200 dark:border-surface-800 pt-3">
+        <div class="px-3 pb-2 text-xs font-medium uppercase tracking-wide text-surface-500 dark:text-surface-400">
+          My Jobs
+        </div>
+
+        <div v-if="sidebarJobsStatus === 'pending'" class="px-3 py-2 text-xs text-surface-400">
+          Loading jobs…
+        </div>
+
+        <nav v-else class="flex flex-col gap-0.5 overflow-y-auto max-h-[calc(100vh-24rem)]">
+          <NuxtLink
+            v-for="job in activeJobsSorted"
+            :key="job.id"
+            :to="$localePath(`/dashboard/jobs/${job.id}`)"
+            class="flex items-center justify-between px-3 py-2 rounded-md text-sm text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-surface-900 dark:hover:text-surface-100 transition-colors no-underline group"
+          >
+            <span class="truncate flex-1 mr-2">{{ job.title }}</span>
+            <span
+              v-if="(job.pipeline?.new ?? 0) > 0"
+              class="inline-flex items-center justify-center min-w-5 h-5 rounded-full bg-warning-100 dark:bg-warning-950 text-warning-700 dark:text-warning-400 text-[11px] font-semibold px-1.5 shrink-0"
+              :title="`${job.pipeline!.new} new application${job.pipeline!.new === 1 ? '' : 's'}`"
+            >
+              {{ job.pipeline!.new }}
+            </span>
+          </NuxtLink>
+
+          <div v-if="sidebarJobs.length === 0" class="px-3 py-4 text-center">
+            <p class="text-xs text-surface-400 mb-2">No jobs yet</p>
+          </div>
+        </nav>
+      </div>
+
+      <!-- Settings link -->
+      <div class="border-t border-surface-200 dark:border-surface-800 pt-3">
+        <NuxtLink
+          :to="$localePath('/dashboard/settings')"
+          class="flex items-center gap-2.5 px-3 py-2 rounded-md text-sm text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-surface-900 dark:hover:text-surface-100 transition-colors no-underline"
+          :class="isActiveTab('/dashboard/settings', false)
+            ? 'bg-surface-100 dark:bg-surface-800 text-surface-900 dark:text-surface-100 font-medium'
+            : ''"
+        >
+          <Settings class="size-4 shrink-0" />
+          Settings
+        </NuxtLink>
       </div>
     </div>
 

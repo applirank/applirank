@@ -3,8 +3,8 @@ import { job } from '../../database/schema'
 import { idParamSchema, updateJobSchema, JOB_STATUS_TRANSITIONS } from '../../utils/schemas/job'
 
 export default defineEventHandler(async (event) => {
-  const session = await requireAuth(event)
-  const orgId = session.session.activeOrganizationId!
+  const session = await requirePermission(event, { job: ['update'] })
+  const orgId = session.session.activeOrganizationId
 
   const { id } = await getValidatedRouterParams(event, idParamSchema.parse)
   const body = await readValidatedBody(event, updateJobSchema.parse)
@@ -61,6 +61,17 @@ export default defineEventHandler(async (event) => {
   if (!updated) {
     throw createError({ statusCode: 404, statusMessage: 'Not found' })
   }
+
+  recordActivity({
+    organizationId: orgId,
+    actorId: session.user.id,
+    action: body.status && body.status !== existing.status ? 'status_changed' : 'updated',
+    resourceType: 'job',
+    resourceId: id,
+    metadata: body.status && body.status !== existing.status
+      ? { from: existing.status, to: body.status }
+      : { title: updated.title },
+  })
 
   return updated
 })

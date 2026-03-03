@@ -4,6 +4,7 @@ import {
   timestamp,
   boolean,
   index,
+  uniqueIndex,
 } from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm'
 
@@ -87,6 +88,7 @@ export const member = pgTable('member', {
 }, (t) => ([
   index('member_user_id_idx').on(t.userId),
   index('member_organization_id_idx').on(t.organizationId),
+  uniqueIndex('member_user_org_unique_idx').on(t.userId, t.organizationId),
 ]))
 
 export const invitation = pgTable('invitation', {

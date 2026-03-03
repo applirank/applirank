@@ -1,10 +1,19 @@
-import { eq, and, desc } from 'drizzle-orm'
-import { job } from '../../database/schema'
+import { eq, and, desc, count, inArray } from 'drizzle-orm'
+import { job, application } from '../../database/schema'
 import { jobQuerySchema } from '../../utils/schemas/job'
 
+interface PipelineCounts {
+  new: number
+  screening: number
+  interview: number
+  offer: number
+  hired: number
+  rejected: number
+}
+
 export default defineEventHandler(async (event) => {
-  const session = await requireAuth(event)
-  const orgId = session.session.activeOrganizationId!
+  const session = await requirePermission(event, { job: ['read'] })
+  const orgId = session.session.activeOrganizationId
 
   const query = await getValidatedQuery(event, jobQuerySchema.parse)
 
@@ -33,5 +42,34 @@ export default defineEventHandler(async (event) => {
     db.$count(job, and(...conditions)),
   ])
 
-  return { data, total, page: query.page, limit: query.limit }
+  // Fetch pipeline counts (application status breakdown) for returned jobs
+  const jobIds = data.map((j) => j.id)
+  let pipelineMap: Record<string, PipelineCounts> = {}
+
+  if (jobIds.length > 0) {
+    const pipelineRows = await db
+      .select({
+        jobId: application.jobId,
+        status: application.status,
+        count: count().as('count'),
+      })
+      .from(application)
+      .where(and(
+        eq(application.organizationId, orgId),
+        inArray(application.jobId, jobIds),
+      ))
+      .groupBy(application.jobId, application.status)
+
+    for (const row of pipelineRows) {
+      const entry = (pipelineMap[row.jobId] ??= { new: 0, screening: 0, interview: 0, offer: 0, hired: 0, rejected: 0 })
+      entry[row.status as keyof PipelineCounts] = row.count
+    }
+  }
+
+  const enrichedData = data.map((j) => ({
+    ...j,
+    pipeline: pipelineMap[j.id] ?? { new: 0, screening: 0, interview: 0, offer: 0, hired: 0, rejected: 0 },
+  }))
+
+  return { data: enrichedData, total, page: query.page, limit: query.limit }
 })

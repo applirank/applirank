@@ -11,8 +11,8 @@ import { application, candidate, job } from '../../database/schema'
  * - Top active jobs (open jobs sorted by application count, top 5)
  */
 export default defineEventHandler(async (event) => {
-  const session = await requireAuth(event)
-  const orgId = session.session.activeOrganizationId!
+  const session = await requirePermission(event, { job: ['read'], candidate: ['read'], application: ['read'] })
+  const orgId = session.session.activeOrganizationId
 
   // ─────────────────────────────────────────────
   // Run all queries in parallel for performance

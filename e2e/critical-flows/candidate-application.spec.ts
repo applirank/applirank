@@ -48,7 +48,7 @@ test.describe('Candidate Application Flow', () => {
     await page.locator('form').getByRole('button', { name: 'Create job' }).click()
 
     // Wait for redirect to jobs list and open the job
-    await page.waitForURL('**/dashboard/jobs', { waitUntil: 'commit' })
+    await page.waitForURL('**/dashboard', { waitUntil: 'commit' })
     await page.getByText(JOB_TITLE).first().click()
 
     // Publish the job

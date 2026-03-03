@@ -3,8 +3,8 @@ import { jobQuestion } from '../../../../database/schema'
 import { questionIdParamSchema } from '../../../../utils/schemas/jobQuestion'
 
 export default defineEventHandler(async (event) => {
-  const session = await requireAuth(event)
-  const orgId = session.session.activeOrganizationId!
+  const session = await requirePermission(event, { job: ['update'] })
+  const orgId = session.session.activeOrganizationId
 
   const { id: jobId, questionId } = await getValidatedRouterParams(event, questionIdParamSchema.parse)
 

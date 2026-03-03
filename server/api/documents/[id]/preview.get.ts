@@ -19,8 +19,8 @@ import { document } from '../../../database/schema'
  *   - X-Frame-Options overridden to SAMEORIGIN for this route only
  */
 export default defineEventHandler(async (event) => {
-  const session = await requireAuth(event)
-  const orgId = session.session.activeOrganizationId!
+  const session = await requirePermission(event, { document: ['read'] })
+  const orgId = session.session.activeOrganizationId
 
   const documentId = getRouterParam(event, 'id')
   if (!documentId) {

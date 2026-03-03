@@ -3,8 +3,8 @@ import { candidate, application } from '../../database/schema'
 import { candidateQuerySchema } from '../../utils/schemas/candidate'
 
 export default defineEventHandler(async (event) => {
-  const session = await requireAuth(event)
-  const orgId = session.session.activeOrganizationId!
+  const session = await requirePermission(event, { candidate: ['read'] })
+  const orgId = session.session.activeOrganizationId
 
   const query = await getValidatedQuery(event, candidateQuerySchema.parse)
 
@@ -12,7 +12,9 @@ export default defineEventHandler(async (event) => {
   const conditions = [eq(candidate.organizationId, orgId)]
 
   if (query.search) {
-    const pattern = `%${query.search}%`
+    // Escape LIKE meta-characters to prevent pattern injection
+    const escaped = query.search.replace(/[%_\\]/g, '\\$&')
+    const pattern = `%${escaped}%`
     conditions.push(
       or(
         ilike(candidate.firstName, pattern),

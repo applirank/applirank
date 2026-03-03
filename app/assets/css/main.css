@@ -325,3 +325,32 @@
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+/* ── Pipeline view premium touches ──────────────────── */
+
+/* Smooth candidate card highlight on selection */
+.pipeline-candidate-card {
+  position: relative;
+  transition: all 0.15s ease;
+}
+
+.pipeline-candidate-card::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: 6px;
+  opacity: 0;
+  pointer-events: none;
+  box-shadow: 0 0 0 1px var(--color-brand-200);
+  transition: opacity 0.15s ease;
+}
+
+.pipeline-candidate-card:hover::after {
+  opacity: 0.4;
+}
+
+/* Pipeline status dot subtle pulse on active tab */
+@keyframes pipeline-dot-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}

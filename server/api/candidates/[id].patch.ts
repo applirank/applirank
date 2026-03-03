@@ -3,8 +3,8 @@ import { candidate } from '../../database/schema'
 import { candidateIdParamSchema, updateCandidateSchema } from '../../utils/schemas/candidate'
 
 export default defineEventHandler(async (event) => {
-  const session = await requireAuth(event)
-  const orgId = session.session.activeOrganizationId!
+  const session = await requirePermission(event, { candidate: ['update'] })
+  const orgId = session.session.activeOrganizationId
 
   const { id } = await getValidatedRouterParams(event, candidateIdParamSchema.parse)
   const body = await readValidatedBody(event, updateCandidateSchema.parse)
@@ -43,6 +43,15 @@ export default defineEventHandler(async (event) => {
   if (!updated) {
     throw createError({ statusCode: 404, statusMessage: 'Not found' })
   }
+
+  recordActivity({
+    organizationId: orgId,
+    actorId: session.user.id,
+    action: 'updated',
+    resourceType: 'candidate',
+    resourceId: id,
+    metadata: { name: `${updated.firstName} ${updated.lastName}` },
+  })
 
   return updated
 })

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Table2, Users, SlidersHorizontal, X, Check, ChevronsUpDown, ChevronUp, ChevronDown } from 'lucide-vue-next'
+import { Table2, Users, SlidersHorizontal, X, Check, ChevronsUpDown, ChevronUp, ChevronDown, UserRound } from 'lucide-vue-next'
 
 definePageMeta({
   layout: 'dashboard',
@@ -23,7 +23,7 @@ const { data: jobData, status: jobFetchStatus, error: jobError } = useFetch(
 
 useSeoMeta({
   title: computed(() =>
-    jobData.value ? `Candidates — ${jobData.value.title} — Reqcore` : 'Candidates — Reqcore',
+    jobData.value ? `Table — ${jobData.value.title} — Reqcore` : 'Table — Reqcore',
   ),
 })
 
@@ -68,12 +68,18 @@ const total = computed(() => appData.value?.total ?? 0)
 // ─────────────────────────────────────────────
 
 const statusBadgeClasses: Record<string, string> = {
-  new: 'bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-400',
-  screening: 'bg-info-50 text-info-700 dark:bg-info-950 dark:text-info-400',
-  interview: 'bg-warning-50 text-warning-700 dark:bg-warning-950 dark:text-warning-400',
-  offer: 'bg-success-50 text-success-700 dark:bg-success-950 dark:text-success-400',
-  hired: 'bg-success-100 text-success-800 dark:bg-success-900 dark:text-success-300',
-  rejected: 'bg-surface-100 text-surface-500 dark:bg-surface-800 dark:text-surface-400',
+  new: 'bg-brand-50 text-brand-700 ring-brand-200 dark:bg-brand-950/50 dark:text-brand-300 dark:ring-brand-800',
+  screening: 'bg-info-50 text-info-700 ring-info-200 dark:bg-info-950/50 dark:text-info-300 dark:ring-info-800',
+  interview: 'bg-warning-50 text-warning-700 ring-warning-200 dark:bg-warning-950/50 dark:text-warning-300 dark:ring-warning-800',
+  offer: 'bg-success-50 text-success-700 ring-success-200 dark:bg-success-950/50 dark:text-success-300 dark:ring-success-800',
+  hired: 'bg-success-100 text-success-800 ring-success-300 dark:bg-success-900/50 dark:text-success-200 dark:ring-success-700',
+  rejected: 'bg-surface-100 text-surface-500 ring-surface-200 dark:bg-surface-800/50 dark:text-surface-400 dark:ring-surface-700',
+}
+
+function getCandidateInitials(firstName?: string, lastName?: string) {
+  const first = firstName?.trim().charAt(0) ?? ''
+  const last = lastName?.trim().charAt(0) ?? ''
+  return `${first}${last}`.toUpperCase() || 'C'
 }
 
 const statusLabels: Record<Status, string> = {
@@ -193,9 +199,9 @@ function timeAgo(date: string | Date) {
 }
 
 function scoreClass(score: number) {
-  if (score >= 75) return 'bg-success-50 text-success-700 dark:bg-success-950 dark:text-success-400'
-  if (score >= 40) return 'bg-warning-50 text-warning-700 dark:bg-warning-950 dark:text-warning-400'
-  return 'bg-danger-50 text-danger-700 dark:bg-danger-950 dark:text-danger-400'
+  if (score >= 75) return 'bg-success-50 text-success-700 ring-success-200 dark:bg-success-950/60 dark:text-success-400 dark:ring-success-800'
+  if (score >= 40) return 'bg-warning-50 text-warning-700 ring-warning-200 dark:bg-warning-950/60 dark:text-warning-400 dark:ring-warning-800'
+  return 'bg-danger-50 text-danger-700 ring-danger-200 dark:bg-danger-950/60 dark:text-danger-400 dark:ring-danger-800'
 }
 
 // ─────────────────────────────────────────────
@@ -227,28 +233,31 @@ const isLoading = computed(() => jobFetchStatus.value === 'pending' || appFetchS
 <template>
   <div>
     <!-- Loading -->
-    <div v-if="isLoading" class="text-center py-12 text-surface-400">
-      Loading candidates…
+    <div v-if="isLoading" class="flex flex-col items-center justify-center py-12 gap-3">
+      <div class="size-8 rounded-full border-2 border-brand-200 border-t-brand-600 dark:border-brand-800 dark:border-t-brand-400 animate-spin" />
+      <p class="text-sm font-medium text-surface-400 dark:text-surface-500">Loading candidates…</p>
     </div>
 
     <!-- Error -->
     <div
       v-else-if="jobError || appError"
-      class="rounded-lg border border-danger-200 bg-danger-50 p-4 text-sm text-danger-700"
+      class="rounded-xl border border-danger-200/80 bg-danger-50 p-5 text-sm text-danger-700 dark:border-danger-800/60 dark:bg-danger-950/40 dark:text-danger-300"
     >
       {{ jobError ? 'Job not found or failed to load.' : 'Failed to load candidates.' }}
-      <NuxtLink :to="$localePath('/dashboard/jobs')" class="underline ml-1">Back to Jobs</NuxtLink>
+      <NuxtLink :to="$localePath('/dashboard')" class="ml-1 font-medium underline hover:no-underline">Back to Jobs</NuxtLink>
     </div>
 
     <template v-else-if="jobData">
       <!-- Header -->
-      <div class="flex items-center gap-3 mb-6">
-        <Table2 class="size-5 text-surface-500 dark:text-surface-400" />
+      <div class="flex items-center gap-3.5 mb-6">
+        <div class="flex size-9 items-center justify-center rounded-xl bg-brand-50 ring-1 ring-brand-100 dark:bg-brand-950/60 dark:ring-brand-900/40">
+          <Table2 class="size-4.5 text-brand-600 dark:text-brand-400" />
+        </div>
         <div>
-          <h1 class="text-2xl font-bold text-surface-900 dark:text-surface-50">
+          <h1 class="text-lg font-semibold tracking-tight text-surface-900 dark:text-surface-50">
             {{ jobData.title }}
           </h1>
-          <p class="text-sm text-surface-500 dark:text-surface-400">
+          <p class="mt-0.5 text-[13px] text-surface-500 dark:text-surface-400">
             {{ total }} candidate{{ total === 1 ? '' : 's' }} applied
           </p>
         </div>
@@ -259,7 +268,7 @@ const isLoading = computed(() => jobFetchStatus.value === 'pending' || appFetchS
         <!-- Column / filter picker -->
         <div ref="panelRef" class="relative">
           <button
-            class="inline-flex items-center gap-2 rounded-lg border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 px-3 py-2 text-sm text-surface-700 dark:text-surface-300 hover:border-surface-300 dark:hover:border-surface-700 transition-colors"
+            class="inline-flex items-center gap-2 rounded-lg border border-surface-200 dark:border-surface-700/80 bg-white dark:bg-surface-900 px-3 py-2 text-sm font-medium text-surface-700 dark:text-surface-300 hover:bg-surface-50 hover:border-surface-300 dark:hover:bg-surface-800 dark:hover:border-surface-600 transition-all duration-150 shadow-sm"
             @click="panelOpen = !panelOpen"
           >
             <SlidersHorizontal class="size-4" />
@@ -275,7 +284,7 @@ const isLoading = computed(() => jobFetchStatus.value === 'pending' || appFetchS
           <!-- Dropdown panel -->
           <div
             v-if="panelOpen"
-            class="absolute left-0 top-full mt-2 z-20 w-72 rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-lg p-4 space-y-5"
+            class="absolute left-0 top-full mt-2 z-20 w-72 rounded-xl border border-surface-200/80 dark:border-surface-700/80 bg-white dark:bg-surface-900 shadow-xl shadow-surface-900/5 dark:shadow-black/20 p-4 space-y-5"
           >
             <!-- Columns -->
             <div>
@@ -328,7 +337,7 @@ const isLoading = computed(() => jobFetchStatus.value === 'pending' || appFetchS
                     <Check v-if="selectedStatuses.includes(s)" class="size-3 text-white" :stroke-width="3" />
                   </span>
                   <span
-                    class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize"
+                  class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold capitalize ring-1 ring-inset"
                     :class="statusBadgeClasses[s]"
                   >
                     {{ statusLabels[s] }}
@@ -401,13 +410,15 @@ const isLoading = computed(() => jobFetchStatus.value === 'pending' || appFetchS
       <!-- Empty state (no applications at all) -->
       <div
         v-if="applications.length === 0"
-        class="rounded-lg border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 p-12 text-center"
+        class="rounded-xl border border-surface-200/80 dark:border-surface-800/60 bg-white dark:bg-surface-900 p-12 text-center shadow-sm shadow-surface-900/[0.03] dark:shadow-none"
       >
-        <Users class="size-10 text-surface-300 dark:text-surface-600 mx-auto mb-3" />
+        <div class="flex size-14 items-center justify-center rounded-2xl bg-surface-100 dark:bg-surface-800/60 mx-auto mb-3">
+          <Users class="size-6 text-surface-400 dark:text-surface-500" />
+        </div>
         <h3 class="text-base font-semibold text-surface-700 dark:text-surface-200 mb-1">
           No candidates yet
         </h3>
-        <p class="text-sm text-surface-500 dark:text-surface-400">
+        <p class="text-sm text-surface-500 dark:text-surface-400 max-w-xs mx-auto">
           Candidates will appear here when they apply to this job or when you link candidates from the Overview tab.
         </p>
       </div>
@@ -415,12 +426,12 @@ const isLoading = computed(() => jobFetchStatus.value === 'pending' || appFetchS
       <!-- Data table -->
       <div
         v-else
-        class="rounded-lg border border-surface-200 dark:border-surface-800 overflow-hidden"
+        class="rounded-xl border border-surface-200/80 dark:border-surface-800/60 overflow-hidden shadow-sm shadow-surface-900/[0.03] dark:shadow-none"
       >
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead>
-              <tr class="border-b border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-900">
+              <tr class="border-b border-surface-200/80 dark:border-surface-800/60 bg-surface-50/80 dark:bg-surface-900">
                 <!-- Name always visible -->
                 <th class="px-4 py-3 text-left text-xs font-medium text-surface-500 dark:text-surface-400 uppercase tracking-wide select-none">
                   <button
@@ -467,7 +478,7 @@ const isLoading = computed(() => jobFetchStatus.value === 'pending' || appFetchS
                 </th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-surface-100 dark:divide-surface-800 bg-white dark:bg-surface-950">
+            <tbody class="divide-y divide-surface-100 dark:divide-surface-800/60 bg-white dark:bg-surface-950">
               <!-- No results after filtering -->
               <tr v-if="sorted.length === 0">
                 <td
@@ -480,14 +491,26 @@ const isLoading = computed(() => jobFetchStatus.value === 'pending' || appFetchS
               <tr
                 v-for="app in sorted"
                 :key="app.id"
-                class="cursor-pointer transition-colors"
+                class="cursor-pointer transition-all duration-150"
                 :class="selectedAppId === app.id
-                  ? 'bg-brand-50 dark:bg-brand-950/50'
-                  : 'hover:bg-surface-50 dark:hover:bg-surface-900'"
+                  ? 'bg-brand-50/70 dark:bg-brand-950/20'
+                  : 'hover:bg-surface-50/80 dark:hover:bg-surface-900/60'"
                 @click="selectRow(app.id)"
               >
-                <td class="px-4 py-3 font-medium text-surface-900 dark:text-surface-100 whitespace-nowrap">
-                  {{ app.candidateFirstName }} {{ app.candidateLastName }}
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <div class="flex items-center gap-3">
+                    <div
+                      class="flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold transition-all duration-150"
+                      :class="selectedAppId === app.id
+                        ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/20 dark:bg-brand-600 dark:shadow-brand-500/10'
+                        : 'bg-surface-100 text-surface-600 dark:bg-surface-800 dark:text-surface-300'"
+                    >
+                      {{ getCandidateInitials(app.candidateFirstName, app.candidateLastName) }}
+                    </div>
+                    <span class="font-medium text-surface-900 dark:text-surface-100">
+                      {{ app.candidateFirstName }} {{ app.candidateLastName }}
+                    </span>
+                  </div>
                 </td>
                 <td v-if="visibleCols.email" class="px-4 py-3 text-surface-600 dark:text-surface-300 max-w-[220px] truncate">
                   {{ app.candidateEmail }}
@@ -495,22 +518,22 @@ const isLoading = computed(() => jobFetchStatus.value === 'pending' || appFetchS
                 <td v-if="visibleCols.score" class="px-4 py-3">
                   <span
                     v-if="app.score != null"
-                    class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium tabular-nums"
+                    class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold tabular-nums ring-1 ring-inset"
                     :class="scoreClass(app.score)"
                   >
-                    {{ app.score }}%
+                    {{ app.score }} pts
                   </span>
-                  <span v-else class="text-surface-300 dark:text-surface-600 text-xs">—</span>
+                  <span v-else class="text-surface-400 dark:text-surface-500 text-xs">—</span>
                 </td>
                 <td v-if="visibleCols.status" class="px-4 py-3">
                   <span
-                    class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize"
-                    :class="statusBadgeClasses[app.status] ?? 'bg-surface-100 text-surface-600'"
+                    class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold capitalize ring-1 ring-inset"
+                    :class="statusBadgeClasses[app.status] ?? 'bg-surface-100 text-surface-600 ring-surface-200'"
                   >
                     {{ app.status }}
                   </span>
                 </td>
-                <td v-if="visibleCols.createdAt" class="px-4 py-3 text-surface-400 whitespace-nowrap text-xs">
+                <td v-if="visibleCols.createdAt" class="px-4 py-3 text-surface-500 dark:text-surface-400 whitespace-nowrap text-xs font-medium">
                   {{ timeAgo(app.createdAt) }}
                 </td>
               </tr>
@@ -519,8 +542,8 @@ const isLoading = computed(() => jobFetchStatus.value === 'pending' || appFetchS
         </div>
 
         <!-- Footer / count -->
-        <div class="px-4 py-3 border-t border-surface-100 dark:border-surface-800 bg-surface-50 dark:bg-surface-900">
-          <p class="text-xs text-surface-400">
+        <div class="px-4 py-3 border-t border-surface-200/80 dark:border-surface-800/60 bg-surface-50/80 dark:bg-surface-900">
+          <p class="text-xs font-medium text-surface-500 dark:text-surface-400">
             {{ sorted.length }} of {{ total }} candidate{{ total === 1 ? '' : 's' }}
           </p>
         </div>

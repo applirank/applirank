@@ -154,8 +154,10 @@ const typeLabels: Record<string, string> = {
   internship: 'Internship',
 }
 
+const { locale } = useI18n()
+
 function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString('en-US', {
+  return new Date(dateStr).toLocaleDateString(locale.value, {
     month: 'long',
     day: 'numeric',
     year: 'numeric',
@@ -166,7 +168,7 @@ function formatDate(dateStr: string) {
 function formatSalary(min?: number | null, max?: number | null, currency?: string | null, unit?: string | null): string | null {
   if (!min && !max) return null
   const cur = currency || 'USD'
-  const fmt = (v: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: cur, maximumFractionDigits: 0 }).format(v)
+  const fmt = (v: number) => new Intl.NumberFormat(locale.value, { style: 'currency', currency: cur, maximumFractionDigits: 0 }).format(v)
   const unitLabel = unit ? `/${unit.toLowerCase().replace('year', 'yr').replace('month', 'mo').replace('hour', 'hr')}` : ''
   if (min && max) return `${fmt(min)} – ${fmt(max)}${unitLabel}`
   return `${fmt(min || max!)}${unitLabel}`

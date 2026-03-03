@@ -91,25 +91,32 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // Validate required text fields
-    firstName = fields.firstName?.trim() ?? ''
-    lastName = fields.lastName?.trim() ?? ''
-    email = fields.email?.trim() ?? ''
-    phone = fields.phone?.trim() || undefined
-    website = fields.website || undefined
-
-    if (!firstName) throw createError({ statusCode: 400, statusMessage: 'First name is required' })
-    if (!lastName) throw createError({ statusCode: 400, statusMessage: 'Last name is required' })
-    if (!email) throw createError({ statusCode: 400, statusMessage: 'Email is required' })
-
-    // Parse responses from JSON string
+    // Parse responses from JSON string before validation
+    let rawResponses: unknown[] = []
     if (fields.responses) {
       try {
-        responseArray = JSON.parse(fields.responses)
+        rawResponses = JSON.parse(fields.responses)
       } catch {
         throw createError({ statusCode: 400, statusMessage: 'Invalid responses format' })
       }
     }
+
+    // Validate all multipart text fields through the same Zod schema as JSON
+    const validated = publicApplicationSchema.parse({
+      firstName: fields.firstName?.trim() ?? '',
+      lastName: fields.lastName?.trim() ?? '',
+      email: fields.email?.trim() ?? '',
+      phone: fields.phone?.trim() || undefined,
+      website: fields.website || undefined,
+      responses: rawResponses,
+    })
+
+    firstName = validated.firstName
+    lastName = validated.lastName
+    email = validated.email
+    phone = validated.phone
+    website = validated.website
+    responseArray = validated.responses
   } else {
     // Standard JSON body
     const body = await readValidatedBody(event, publicApplicationSchema.parse)

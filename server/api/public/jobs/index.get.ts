@@ -17,7 +17,9 @@ export default defineEventHandler(async (event) => {
 
   // Optional search — matches title OR location
   if (query.search) {
-    const pattern = `%${query.search}%`
+    // Escape LIKE meta-characters to prevent pattern injection
+    const escaped = query.search.replace(/[%_\\]/g, '\\$&')
+    const pattern = `%${escaped}%`
     conditions.push(
       or(
         ilike(job.title, pattern),
@@ -33,7 +35,9 @@ export default defineEventHandler(async (event) => {
 
   // Optional location filter
   if (query.location) {
-    conditions.push(ilike(job.location, `%${query.location}%`))
+    // Escape LIKE meta-characters to prevent pattern injection
+    const escapedLoc = query.location.replace(/[%_\\]/g, '\\$&')
+    conditions.push(ilike(job.location, `%${escapedLoc}%`))
   }
 
   const where = and(...conditions)

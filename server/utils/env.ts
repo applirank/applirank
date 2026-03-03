@@ -69,6 +69,10 @@ const envSchema = z
     GITHUB_FEEDBACK_TOKEN: emptyToUndefined.pipe(z.string().min(1)).optional(),
     /** GitHub repo in "owner/repo" format for feedback issues. */
     GITHUB_FEEDBACK_REPO: emptyToUndefined.pipe(z.string().regex(/^[^/]+\/[^/]+$/, 'Must be in "owner/repo" format')).optional(),
+    /** Resend API key for transactional emails (invitations, etc.). When not set, emails are logged to console. */
+    RESEND_API_KEY: emptyToUndefined.pipe(z.string().min(1)).optional(),
+    /** Sender email address for Resend emails. Must be a verified domain in Resend. Defaults to "Reqcore <noreply@reqcore.com>". */
+    RESEND_FROM_EMAIL: emptyToUndefined.pipe(z.string().min(1)).optional().default('Reqcore <noreply@reqcore.com>'),
   })
   .superRefine((data, ctx) => {
     const hasPreviewDomain = data.RAILWAY_PUBLIC_DOMAIN
@@ -115,7 +119,7 @@ export const env = new Proxy({} as z.infer<typeof envSchema>, {
           `Ensure these variables are set in your Railway service (Settings → Variables).\n` +
           `Required: DATABASE_URL, BETTER_AUTH_SECRET, S3_ENDPOINT, S3_ACCESS_KEY, S3_SECRET_KEY, S3_BUCKET\n` +
           `Required outside Railway PR/preview environments: BETTER_AUTH_URL\n` +
-          `Optional: BETTER_AUTH_TRUSTED_ORIGINS, S3_REGION (default: us-east-1), S3_FORCE_PATH_STYLE (default: true), TRUSTED_PROXY_IP, DEMO_ORG_SLUG\n`,
+          `Optional: BETTER_AUTH_TRUSTED_ORIGINS, S3_REGION (default: us-east-1), S3_FORCE_PATH_STYLE (default: true), TRUSTED_PROXY_IP, DEMO_ORG_SLUG, RESEND_API_KEY, RESEND_FROM_EMAIL\n`,
         )
         throw result.error
       }

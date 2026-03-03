@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+export { APPLICATION_STATUS_TRANSITIONS } from '~~/shared/status-transitions'
+
 // ─────────────────────────────────────────────
 // Application validation schemas — shared across API routes
 // ─────────────────────────────────────────────
@@ -32,20 +34,5 @@ export const applicationIdParamSchema = z.object({
   id: z.string().min(1),
 })
 
-// ─────────────────────────────────────────────
-// Status transition rules
-// ─────────────────────────────────────────────
-
-/**
- * Allowed status transitions for applications.
- * - `hired` is terminal — no forward transitions
- * - `rejected` can be re-opened back to `new`
- */
-export const APPLICATION_STATUS_TRANSITIONS: Record<string, string[]> = {
-  new: ['screening', 'interview', 'rejected'],
-  screening: ['interview', 'offer', 'rejected'],
-  interview: ['offer', 'rejected'],
-  offer: ['hired', 'rejected'],
-  hired: [],
-  rejected: ['new'],
-}
+// Status transition rules are now in shared/status-transitions.ts
+// and re-exported above for backward compatibility.

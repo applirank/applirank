@@ -15,14 +15,14 @@ const isDemo = computed(() => {
 </script>
 
 <template>
-  <div class="flex min-h-screen">
-    <AppSidebar />
+  <div class="flex min-h-screen flex-col bg-surface-50 dark:bg-surface-950">
+    <AppTopBar />
     <PreviewUpsellModal v-if="isUpsellOpen" @close="closeUpsell" />
-    <main class="flex-1 overflow-y-auto bg-surface-50 dark:bg-surface-950 px-6 py-8">
+    <main class="flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
       <!-- Demo mode banner -->
       <div
         v-if="isDemo"
-        class="mx-auto mb-6 flex max-w-4xl items-center gap-3 rounded-lg border border-brand-200 dark:border-brand-900 bg-brand-50 dark:bg-brand-950/40 px-4 py-2.5 text-sm text-brand-700 dark:text-brand-300"
+        class="mx-auto mb-6 flex max-w-5xl items-center gap-3 rounded-lg border border-brand-200 dark:border-brand-900 bg-brand-50 dark:bg-brand-950/40 px-4 py-2.5 text-sm text-brand-700 dark:text-brand-300"
       >
         <Eye class="size-4 shrink-0" />
         <span>

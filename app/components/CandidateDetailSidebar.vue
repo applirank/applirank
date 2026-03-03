@@ -18,6 +18,16 @@ const emit = defineEmits<{
 
 const { handlePreviewReadOnlyError } = usePreviewReadOnly()
 
+// Detect if the job sub-nav bar is visible (adds 40px / 2.5rem)
+const route = useRoute()
+const getRouteBaseName = useRouteBaseName()
+const hasSubNav = computed(() => {
+  const baseName = getRouteBaseName(route)
+  if (typeof baseName !== 'string') return false
+  const idParam = route.params.id
+  return baseName.startsWith('dashboard-jobs-id') && typeof idParam === 'string' && idParam !== 'new'
+})
+
 // ─────────────────────────────────────────────
 // Tabs
 // ─────────────────────────────────────────────
@@ -63,15 +73,7 @@ const documents = computed(() => candidateData.value?.documents ?? [])
 // ─────────────────────────────────────────────
 // Status transitions
 // ─────────────────────────────────────────────
-
-const STATUS_TRANSITIONS: Record<string, string[]> = {
-  new: ['screening', 'interview', 'rejected'],
-  screening: ['interview', 'offer', 'rejected'],
-  interview: ['offer', 'rejected'],
-  offer: ['hired', 'rejected'],
-  hired: [],
-  rejected: ['new'],
-}
+import { APPLICATION_STATUS_TRANSITIONS } from '~~/shared/status-transitions'
 
 const transitionLabels: Record<string, string> = {
   new: 'Re-open',
@@ -92,17 +94,17 @@ const transitionClasses: Record<string, string> = {
 }
 
 const statusBadgeClasses: Record<string, string> = {
-  new: 'bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-400',
-  screening: 'bg-info-50 text-info-700 dark:bg-info-950 dark:text-info-400',
-  interview: 'bg-warning-50 text-warning-700 dark:bg-warning-950 dark:text-warning-400',
-  offer: 'bg-success-50 text-success-700 dark:bg-success-950 dark:text-success-400',
-  hired: 'bg-success-100 text-success-800 dark:bg-success-900 dark:text-success-300',
-  rejected: 'bg-surface-100 text-surface-500 dark:bg-surface-800 dark:text-surface-400',
+  new: 'bg-brand-50 text-brand-700 ring-brand-200 dark:bg-brand-950/50 dark:text-brand-300 dark:ring-brand-800',
+  screening: 'bg-info-50 text-info-700 ring-info-200 dark:bg-info-950/50 dark:text-info-300 dark:ring-info-800',
+  interview: 'bg-warning-50 text-warning-700 ring-warning-200 dark:bg-warning-950/50 dark:text-warning-300 dark:ring-warning-800',
+  offer: 'bg-success-50 text-success-700 ring-success-200 dark:bg-success-950/50 dark:text-success-300 dark:ring-success-800',
+  hired: 'bg-success-100 text-success-800 ring-success-300 dark:bg-success-900/50 dark:text-success-200 dark:ring-success-700',
+  rejected: 'bg-surface-100 text-surface-500 ring-surface-200 dark:bg-surface-800/50 dark:text-surface-400 dark:ring-surface-700',
 }
 
 const allowedTransitions = computed(() => {
   if (!application.value) return []
-  return STATUS_TRANSITIONS[application.value.status] ?? []
+  return APPLICATION_STATUS_TRANSITIONS[application.value.status] ?? []
 })
 
 const isTransitioning = ref(false)
@@ -304,10 +306,11 @@ const responsesCount = computed(() => application.value?.responses?.length ?? 0)
   <Transition name="slide">
     <aside
       v-if="open"
-      class="fixed top-0 right-0 z-40 h-full w-[640px] max-w-[calc(100vw-4rem)] border-l border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-xl flex flex-col"
+      class="fixed right-0 z-40 w-[640px] max-w-[calc(100vw-4rem)] border-l border-surface-200/80 dark:border-surface-800/60 bg-white dark:bg-surface-900 shadow-xl flex flex-col"
+      :class="hasSubNav ? 'top-24 h-[calc(100vh-6rem)]' : 'top-14 h-[calc(100vh-3.5rem)]'"
     >
       <!-- Header -->
-      <div class="flex items-center justify-between border-b border-surface-200 dark:border-surface-800 px-6 py-4 shrink-0">
+      <div class="flex items-center justify-between border-b border-surface-200/80 dark:border-surface-800/60 px-6 py-4 shrink-0">
         <div v-if="application" class="min-w-0 flex-1">
           <div class="flex items-center gap-3">
             <div class="flex items-center justify-center size-10 rounded-full bg-brand-50 dark:bg-brand-950 text-brand-700 dark:text-brand-400 font-semibold text-sm shrink-0">
@@ -343,7 +346,7 @@ const responsesCount = computed(() => application.value?.responses?.length ?? 0)
       </div>
 
       <!-- Tabs -->
-      <div v-if="application" class="border-b border-surface-200 dark:border-surface-800 px-6 shrink-0">
+      <div v-if="application" class="border-b border-surface-200/80 dark:border-surface-800/60 px-6 shrink-0">
         <div class="flex gap-1">
           <button
             class="cursor-pointer px-3 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px"
@@ -393,8 +396,8 @@ const responsesCount = computed(() => application.value?.responses?.length ?? 0)
             <div>
               <div class="flex items-center gap-2 mb-3">
                 <span
-                  class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize"
-                  :class="statusBadgeClasses[application.status] ?? 'bg-surface-100 text-surface-600'"
+                  class="inline-flex items-center rounded-md px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 ring-inset"
+                  :class="statusBadgeClasses[application.status] ?? 'bg-surface-100 text-surface-600 ring-surface-200'"
                 >
                   {{ application.status }}
                 </span>
@@ -419,27 +422,29 @@ const responsesCount = computed(() => application.value?.responses?.length ?? 0)
             </div>
 
             <!-- Candidate info -->
-            <div class="rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-950 p-5">
-              <div class="flex items-center gap-2 mb-3">
-                <User class="size-4 text-surface-500 dark:text-surface-400" />
-                <h3 class="text-sm font-semibold text-surface-700 dark:text-surface-200">Candidate</h3>
+            <div class="rounded-xl border border-surface-200/80 dark:border-surface-800/60 bg-white dark:bg-surface-950 p-5 shadow-sm shadow-surface-900/[0.03] dark:shadow-none">
+              <div class="flex items-center gap-2.5 mb-4">
+                <div class="flex size-7 items-center justify-center rounded-lg bg-brand-50 dark:bg-brand-950/40">
+                  <User class="size-3.5 text-brand-600 dark:text-brand-400" />
+                </div>
+                <h3 class="text-sm font-semibold text-surface-800 dark:text-surface-200">Candidate</h3>
               </div>
-              <dl class="grid grid-cols-2 gap-3 text-sm">
+              <dl class="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <dt class="text-surface-400">Name</dt>
-                  <dd class="text-surface-700 dark:text-surface-200 font-medium">
+                  <dt class="text-xs font-medium text-surface-400 dark:text-surface-500 mb-1">Name</dt>
+                  <dd class="text-surface-800 dark:text-surface-200 font-medium">
                     {{ application.candidate.firstName }} {{ application.candidate.lastName }}
                   </dd>
                 </div>
                 <div>
-                  <dt class="text-surface-400">Email</dt>
-                  <dd class="text-surface-700 dark:text-surface-200 font-medium truncate">
+                  <dt class="text-xs font-medium text-surface-400 dark:text-surface-500 mb-1">Email</dt>
+                  <dd class="text-surface-800 dark:text-surface-200 font-medium truncate">
                     {{ application.candidate.email }}
                   </dd>
                 </div>
                 <div v-if="application.candidate.phone">
-                  <dt class="text-surface-400">Phone</dt>
-                  <dd class="text-surface-700 dark:text-surface-200 font-medium">
+                  <dt class="text-xs font-medium text-surface-400 dark:text-surface-500 mb-1">Phone</dt>
+                  <dd class="text-surface-800 dark:text-surface-200 font-medium">
                     {{ application.candidate.phone }}
                   </dd>
                 </div>
@@ -447,39 +452,41 @@ const responsesCount = computed(() => application.value?.responses?.length ?? 0)
             </div>
 
             <!-- Application details -->
-            <div class="rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-950 p-5">
-              <div class="flex items-center gap-2 mb-3">
-                <Hash class="size-4 text-surface-500 dark:text-surface-400" />
-                <h3 class="text-sm font-semibold text-surface-700 dark:text-surface-200">Details</h3>
+            <div class="rounded-xl border border-surface-200/80 dark:border-surface-800/60 bg-white dark:bg-surface-950 p-5 shadow-sm shadow-surface-900/[0.03] dark:shadow-none">
+              <div class="flex items-center gap-2.5 mb-4">
+                <div class="flex size-7 items-center justify-center rounded-lg bg-info-50 dark:bg-info-950/40">
+                  <Hash class="size-3.5 text-info-600 dark:text-info-400" />
+                </div>
+                <h3 class="text-sm font-semibold text-surface-800 dark:text-surface-200">Details</h3>
               </div>
-              <dl class="grid grid-cols-2 gap-3 text-sm">
+              <dl class="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <dt class="text-surface-400">Score</dt>
-                  <dd class="text-surface-700 dark:text-surface-200 font-medium">
+                  <dt class="text-xs font-medium text-surface-400 dark:text-surface-500 mb-1">Score</dt>
+                  <dd class="text-surface-800 dark:text-surface-200 font-medium">
                     {{ application.score ?? '—' }}
                   </dd>
                 </div>
                 <div>
-                  <dt class="text-surface-400">Status</dt>
-                  <dd class="text-surface-700 dark:text-surface-200 font-medium capitalize">
+                  <dt class="text-xs font-medium text-surface-400 dark:text-surface-500 mb-1">Status</dt>
+                  <dd class="text-surface-800 dark:text-surface-200 font-medium capitalize">
                     {{ application.status }}
                   </dd>
                 </div>
                 <div>
-                  <dt class="text-surface-400 inline-flex items-center gap-1">
+                  <dt class="text-xs font-medium text-surface-400 dark:text-surface-500 mb-1 inline-flex items-center gap-1">
                     <Calendar class="size-3.5" />
                     Applied
                   </dt>
-                  <dd class="text-surface-700 dark:text-surface-200 font-medium">
+                  <dd class="text-surface-800 dark:text-surface-200 font-medium">
                     {{ new Date(application.createdAt).toLocaleDateString() }}
                   </dd>
                 </div>
                 <div>
-                  <dt class="text-surface-400 inline-flex items-center gap-1">
+                  <dt class="text-xs font-medium text-surface-400 dark:text-surface-500 mb-1 inline-flex items-center gap-1">
                     <Clock class="size-3.5" />
                     Updated
                   </dt>
-                  <dd class="text-surface-700 dark:text-surface-200 font-medium">
+                  <dd class="text-surface-800 dark:text-surface-200 font-medium">
                     {{ new Date(application.updatedAt).toLocaleDateString() }}
                   </dd>
                 </div>
@@ -487,11 +494,13 @@ const responsesCount = computed(() => application.value?.responses?.length ?? 0)
             </div>
 
             <!-- Notes -->
-            <div class="rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-950 p-5">
-              <div class="flex items-center justify-between mb-3">
-                <div class="flex items-center gap-2">
-                  <MessageSquare class="size-4 text-surface-500 dark:text-surface-400" />
-                  <h3 class="text-sm font-semibold text-surface-700 dark:text-surface-200">Notes</h3>
+            <div class="rounded-xl border border-surface-200/80 dark:border-surface-800/60 bg-white dark:bg-surface-950 p-5 shadow-sm shadow-surface-900/[0.03] dark:shadow-none">
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2.5">
+                  <div class="flex size-7 items-center justify-center rounded-lg bg-warning-50 dark:bg-warning-950/40">
+                    <MessageSquare class="size-3.5 text-warning-600 dark:text-warning-400" />
+                  </div>
+                  <h3 class="text-sm font-semibold text-surface-800 dark:text-surface-200">Notes</h3>
                 </div>
                 <button
                   v-if="!isEditingNotes"
@@ -528,7 +537,7 @@ const responsesCount = computed(() => application.value?.responses?.length ?? 0)
 
               <p
                 v-else-if="application.notes"
-                class="text-sm text-surface-600 dark:text-surface-300 whitespace-pre-wrap"
+                class="text-sm leading-relaxed text-surface-600 dark:text-surface-300 whitespace-pre-wrap"
               >
                 {{ application.notes }}
               </p>
@@ -659,11 +668,13 @@ const responsesCount = computed(() => application.value?.responses?.length ?? 0)
               <!-- Empty state -->
               <div
                 v-if="documents.length === 0"
-                class="rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-950 p-8 text-center"
+                class="rounded-xl border border-surface-200/80 dark:border-surface-800/60 bg-white dark:bg-surface-950 p-8 text-center shadow-sm shadow-surface-900/[0.03] dark:shadow-none"
               >
-                <FileText class="size-8 text-surface-300 dark:text-surface-600 mx-auto mb-2" />
-                <p class="text-sm text-surface-500 dark:text-surface-400">No documents yet.</p>
-                <p class="text-xs text-surface-400 mt-1">
+                <div class="flex size-14 items-center justify-center rounded-2xl bg-surface-100 dark:bg-surface-800/60 mx-auto mb-3">
+                  <FileText class="size-6 text-surface-400 dark:text-surface-500" />
+                </div>
+                <p class="text-sm font-medium text-surface-600 dark:text-surface-300">No documents yet.</p>
+                <p class="text-xs text-surface-400 dark:text-surface-500 mt-1">
                   Upload a resume, cover letter, or other document (PDF, DOC, DOCX — max 10 MB).
                 </p>
               </div>
@@ -673,7 +684,7 @@ const responsesCount = computed(() => application.value?.responses?.length ?? 0)
                 <div
                   v-for="doc in documents"
                   :key="doc.id"
-                  class="group flex items-center justify-between rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-950 px-4 py-3 transition-colors"
+                  class="group flex items-center justify-between rounded-xl border border-surface-200/80 dark:border-surface-800/60 bg-white dark:bg-surface-950 px-4 py-3 shadow-sm shadow-surface-900/[0.03] dark:shadow-none transition-colors"
                   :class="doc.mimeType === 'application/pdf' ? 'cursor-pointer hover:border-brand-300 dark:hover:border-brand-700 hover:bg-brand-50/50 dark:hover:bg-brand-950/30' : ''"
                   @click="doc.mimeType === 'application/pdf' ? handlePreview(doc.id, doc.mimeType) : undefined"
                 >
@@ -724,22 +735,24 @@ const responsesCount = computed(() => application.value?.responses?.length ?? 0)
           <div v-if="activeTab === 'responses'" class="space-y-3">
             <div
               v-if="responsesCount === 0"
-              class="rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-950 p-8 text-center"
+              class="rounded-xl border border-surface-200/80 dark:border-surface-800/60 bg-white dark:bg-surface-950 p-8 text-center shadow-sm shadow-surface-900/[0.03] dark:shadow-none"
             >
-              <FileText class="size-8 text-surface-300 dark:text-surface-600 mx-auto mb-2" />
-              <p class="text-sm text-surface-500 dark:text-surface-400">No application responses.</p>
+              <div class="flex size-14 items-center justify-center rounded-2xl bg-surface-100 dark:bg-surface-800/60 mx-auto mb-3">
+                <FileText class="size-6 text-surface-400 dark:text-surface-500" />
+              </div>
+              <p class="text-sm font-medium text-surface-600 dark:text-surface-300">No application responses.</p>
             </div>
 
             <div v-else class="space-y-3">
               <div
                 v-for="response in application.responses"
                 :key="response.id"
-                class="rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-950 p-4"
+                class="rounded-xl border border-surface-200/80 dark:border-surface-800/60 bg-white dark:bg-surface-950 p-4 shadow-sm shadow-surface-900/[0.03] dark:shadow-none"
               >
-                <dt class="text-xs font-medium text-surface-500 dark:text-surface-400 mb-1 uppercase tracking-wide">
+                <dt class="text-xs font-semibold text-surface-400 dark:text-surface-500 mb-1.5 uppercase tracking-wider">
                   {{ response.question?.label ?? 'Unknown question' }}
                 </dt>
-                <dd class="text-sm text-surface-700 dark:text-surface-200">
+                <dd class="text-sm text-surface-700 dark:text-surface-200 leading-relaxed">
                   {{ formatResponseValue(response.value) }}
                 </dd>
               </div>
@@ -757,7 +770,7 @@ const responsesCount = computed(() => application.value?.responses?.length ?? 0)
   <Teleport to="body">
     <div v-if="showDocDeleteConfirm" class="fixed inset-0 z-50 flex items-center justify-center">
       <div class="absolute inset-0 bg-black/50" @click="showDocDeleteConfirm = null" />
-      <div class="relative bg-white dark:bg-surface-900 rounded-xl shadow-xl p-6 max-w-sm w-full mx-4">
+      <div class="relative bg-white dark:bg-surface-900 rounded-2xl shadow-2xl shadow-surface-900/10 dark:shadow-black/30 ring-1 ring-surface-200/80 dark:ring-surface-700/60 p-6 max-w-sm w-full mx-4">
         <h3 class="text-lg font-semibold text-surface-900 dark:text-surface-50 mb-2">Delete Document</h3>
         <p class="text-sm text-surface-600 dark:text-surface-400 mb-4">
           Are you sure you want to delete this document? This action cannot be undone.

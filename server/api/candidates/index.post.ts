@@ -3,8 +3,8 @@ import { candidate } from '../../database/schema'
 import { createCandidateSchema } from '../../utils/schemas/candidate'
 
 export default defineEventHandler(async (event) => {
-  const session = await requireAuth(event)
-  const orgId = session.session.activeOrganizationId!
+  const session = await requirePermission(event, { candidate: ['create'] })
+  const orgId = session.session.activeOrganizationId
 
   const body = await readValidatedBody(event, createCandidateSchema.parse)
 
@@ -38,6 +38,19 @@ export default defineEventHandler(async (event) => {
     phone: candidate.phone,
     createdAt: candidate.createdAt,
     updatedAt: candidate.updatedAt,
+  })
+
+  if (!created) {
+    throw createError({ statusCode: 500, statusMessage: 'Failed to create candidate' })
+  }
+
+  recordActivity({
+    organizationId: orgId,
+    actorId: session.user.id,
+    action: 'created',
+    resourceType: 'candidate',
+    resourceId: created.id,
+    metadata: { name: `${created.firstName} ${created.lastName}` },
   })
 
   setResponseStatus(event, 201)

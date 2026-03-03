@@ -2,8 +2,8 @@ import { job } from '../../database/schema'
 import { createJobSchema } from '../../utils/schemas/job'
 
 export default defineEventHandler(async (event) => {
-  const session = await requireAuth(event)
-  const orgId = session.session.activeOrganizationId!
+  const session = await requirePermission(event, { job: ['create'] })
+  const orgId = session.session.activeOrganizationId
 
   const body = await readValidatedBody(event, createJobSchema.parse)
 
@@ -41,6 +41,19 @@ export default defineEventHandler(async (event) => {
     validThrough: job.validThrough,
     createdAt: job.createdAt,
     updatedAt: job.updatedAt,
+  })
+
+  if (!created) {
+    throw createError({ statusCode: 500, statusMessage: 'Failed to create job' })
+  }
+
+  recordActivity({
+    organizationId: orgId,
+    actorId: session.user.id,
+    action: 'created',
+    resourceType: 'job',
+    resourceId: created.id,
+    metadata: { title: created.title },
   })
 
   setResponseStatus(event, 201)

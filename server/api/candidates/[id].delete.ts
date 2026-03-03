@@ -3,8 +3,8 @@ import { candidate } from '../../database/schema'
 import { candidateIdParamSchema } from '../../utils/schemas/candidate'
 
 export default defineEventHandler(async (event) => {
-  const session = await requireAuth(event)
-  const orgId = session.session.activeOrganizationId!
+  const session = await requirePermission(event, { candidate: ['delete'] })
+  const orgId = session.session.activeOrganizationId
 
   const { id } = await getValidatedRouterParams(event, candidateIdParamSchema.parse)
 
@@ -15,6 +15,14 @@ export default defineEventHandler(async (event) => {
   if (!deleted) {
     throw createError({ statusCode: 404, statusMessage: 'Not found' })
   }
+
+  recordActivity({
+    organizationId: orgId,
+    actorId: session.user.id,
+    action: 'deleted',
+    resourceType: 'candidate',
+    resourceId: id,
+  })
 
   setResponseStatus(event, 204)
   return null

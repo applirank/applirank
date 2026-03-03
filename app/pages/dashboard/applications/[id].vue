@@ -24,15 +24,7 @@ useSeoMeta({
 // ─────────────────────────────────────────────
 // Status transitions
 // ─────────────────────────────────────────────
-
-const STATUS_TRANSITIONS: Record<string, string[]> = {
-  new: ['screening', 'interview', 'rejected'],
-  screening: ['interview', 'offer', 'rejected'],
-  interview: ['offer', 'rejected'],
-  offer: ['hired', 'rejected'],
-  hired: [],
-  rejected: ['new'],
-}
+import { APPLICATION_STATUS_TRANSITIONS } from '~~/shared/status-transitions'
 
 const transitionLabels: Record<string, string> = {
   new: 'Re-open',
@@ -63,7 +55,7 @@ const transitionDotClasses: Record<string, string> = {
 
 const allowedTransitions = computed(() => {
   if (!application.value) return []
-  return STATUS_TRANSITIONS[application.value.status] ?? []
+  return APPLICATION_STATUS_TRANSITIONS[application.value.status] ?? []
 })
 
 const isTransitioning = ref(false)

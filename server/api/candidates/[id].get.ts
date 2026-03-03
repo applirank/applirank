@@ -3,8 +3,8 @@ import { candidate } from '../../database/schema'
 import { candidateIdParamSchema } from '../../utils/schemas/candidate'
 
 export default defineEventHandler(async (event) => {
-  const session = await requireAuth(event)
-  const orgId = session.session.activeOrganizationId!
+  const session = await requirePermission(event, { candidate: ['read'] })
+  const orgId = session.session.activeOrganizationId
 
   const { id } = await getValidatedRouterParams(event, candidateIdParamSchema.parse)
 

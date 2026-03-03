@@ -47,7 +47,7 @@ test.describe('Job Creation Flow', () => {
     await page.locator('form').getByRole('button', { name: 'Create job' }).click()
 
     // ── Verify redirect to jobs list ─────────────────────
-    await page.waitForURL('**/dashboard/jobs', { waitUntil: 'commit' })
+    await page.waitForURL('**/dashboard', { waitUntil: 'commit' })
     await expect(page.getByText(JOB_TITLE)).toBeVisible()
 
     // ── Open the job detail page ─────────────────────────

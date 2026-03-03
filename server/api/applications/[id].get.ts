@@ -7,8 +7,8 @@ import { applicationIdParamSchema } from '../../utils/schemas/application'
  * Single application detail with related candidate, job, and question responses.
  */
 export default defineEventHandler(async (event) => {
-  const session = await requireAuth(event)
-  const orgId = session.session.activeOrganizationId!
+  const session = await requirePermission(event, { application: ['read'] })
+  const orgId = session.session.activeOrganizationId
 
   const { id } = await getValidatedRouterParams(event, applicationIdParamSchema.parse)
 

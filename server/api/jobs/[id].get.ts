@@ -3,8 +3,8 @@ import { job } from '../../database/schema'
 import { idParamSchema } from '../../utils/schemas/job'
 
 export default defineEventHandler(async (event) => {
-  const session = await requireAuth(event)
-  const orgId = session.session.activeOrganizationId!
+  const session = await requirePermission(event, { job: ['read'] })
+  const orgId = session.session.activeOrganizationId
 
   const { id } = await getValidatedRouterParams(event, idParamSchema.parse)
 

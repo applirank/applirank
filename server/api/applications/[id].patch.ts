@@ -7,8 +7,8 @@ import { applicationIdParamSchema, updateApplicationSchema, APPLICATION_STATUS_T
  * Update application status (with server-side transition validation), notes, and score.
  */
 export default defineEventHandler(async (event) => {
-  const session = await requireAuth(event)
-  const orgId = session.session.activeOrganizationId!
+  const session = await requirePermission(event, { application: ['update'] })
+  const orgId = session.session.activeOrganizationId
 
   const { id } = await getValidatedRouterParams(event, applicationIdParamSchema.parse)
   const body = await readValidatedBody(event, updateApplicationSchema.parse)
@@ -51,6 +51,17 @@ export default defineEventHandler(async (event) => {
   if (!updated) {
     throw createError({ statusCode: 404, statusMessage: 'Not found' })
   }
+
+  recordActivity({
+    organizationId: orgId,
+    actorId: session.user.id,
+    action: body.status && body.status !== current.status ? 'status_changed' : 'updated',
+    resourceType: 'application',
+    resourceId: id,
+    metadata: body.status && body.status !== current.status
+      ? { from: current.status, to: body.status }
+      : undefined,
+  })
 
   return updated
 })

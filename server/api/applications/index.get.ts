@@ -8,8 +8,8 @@ import { applicationQuerySchema } from '../../utils/schemas/application'
  * Filterable by jobId, candidateId, and status. Paginated.
  */
 export default defineEventHandler(async (event) => {
-  const session = await requireAuth(event)
-  const orgId = session.session.activeOrganizationId!
+  const session = await requirePermission(event, { application: ['read'] })
+  const orgId = session.session.activeOrganizationId
 
   const query = await getValidatedQuery(event, applicationQuerySchema.parse)
 
