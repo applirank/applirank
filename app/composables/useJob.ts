@@ -24,6 +24,8 @@ export function useJob(id: MaybeRefOrGetter<string>) {
     location: string
     type: 'full_time' | 'part_time' | 'contract' | 'internship'
     status: 'draft' | 'open' | 'closed' | 'archived'
+    requireResume: boolean
+    requireCoverLetter: boolean
   }>) {
     try {
       const updated = await $fetch(`/api/jobs/${jobId.value}`, {

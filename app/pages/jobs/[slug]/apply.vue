@@ -38,14 +38,20 @@ const responses = ref<Record<string, string | string[] | number | boolean>>({})
 // File uploads: questionId → File object
 const fileUploads = ref<Record<string, File>>({})
 
+// Built-in document uploads (resume) and cover letter text
+const resumeFile = ref<File | null>(null)
+const coverLetterText = ref('')
+
 const isSubmitting = ref(false)
 const errors = ref<Record<string, string>>({})
 const submitError = ref<string | null>(null)
 
-/** Whether the form has any file_upload type questions */
-const hasFileQuestions = computed(() =>
-  job.value?.questions?.some((q: { type: string }) => q.type === 'file_upload') ?? false,
-)
+/** Whether the form has any file_upload type questions OR built-in document fields */
+const hasFileQuestions = computed(() => {
+  const hasCustomFileQ = job.value?.questions?.some((q: { type: string }) => q.type === 'file_upload') ?? false
+  const hasBuiltInFiles = !!resumeFile.value
+  return hasCustomFileQ || hasBuiltInFiles
+})
 
 /**
  * Handle file selection from DynamicField.
@@ -61,6 +67,7 @@ function handleFileSelected(questionId: string, file: File | null) {
 
 function validate(): boolean {
   errors.value = {}
+  const maxSize = 10 * 1024 * 1024
 
   if (!form.value.firstName.trim()) errors.value.firstName = 'First name is required'
   if (!form.value.lastName.trim()) errors.value.lastName = 'Last name is required'
@@ -68,6 +75,21 @@ function validate(): boolean {
     errors.value.email = 'Email is required'
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.value.email)) {
     errors.value.email = 'Invalid email address'
+  }
+
+  // Validate required resume
+  if (job.value?.requireResume && !resumeFile.value) {
+    errors.value.resume = 'Resume/CV is required'
+  }
+
+  // Validate required cover letter
+  if (job.value?.requireCoverLetter && !coverLetterText.value.trim()) {
+    errors.value.coverLetter = 'Cover letter is required'
+  }
+
+  // Validate resume file size
+  if (resumeFile.value && resumeFile.value.size > maxSize) {
+    errors.value.resume = 'File too large. Maximum 10 MB.'
   }
 
   // Validate required custom questions
@@ -92,8 +114,7 @@ function validate(): boolean {
     }
   }
 
-  // Validate file sizes (10 MB max)
-  const maxSize = 10 * 1024 * 1024
+  // Validate custom file upload sizes
   for (const [questionId, file] of Object.entries(fileUploads.value)) {
     if (file.size > maxSize) {
       errors.value[`q-${questionId}`] = 'File too large. Maximum 10 MB.'
@@ -125,7 +146,11 @@ async function handleSubmit() {
       })
       .map(([questionId, value]) => ({ questionId, value }))
 
-    if (hasFileQuestions.value && Object.keys(fileUploads.value).length > 0) {
+    // Determine if we need FormData (any files present — custom or built-in)
+    const hasAnyFiles = Object.keys(fileUploads.value).length > 0
+      || !!resumeFile.value
+
+    if (hasAnyFiles) {
       // Use FormData when files are present
       const formData = new FormData()
       formData.append('firstName', form.value.firstName.trim())
@@ -141,9 +166,18 @@ async function handleSubmit() {
       // Serialize non-file responses as JSON
       formData.append('responses', JSON.stringify(responseArray))
 
-      // Append each file with its question ID as key
+      // Append custom question files
       for (const [questionId, file] of Object.entries(fileUploads.value)) {
         formData.append(`file:${questionId}`, file)
+      }
+
+      // Append built-in resume
+      if (resumeFile.value) {
+        formData.append('resume', resumeFile.value)
+      }
+      // Append cover letter text
+      if (coverLetterText.value.trim()) {
+        formData.append('coverLetterText', coverLetterText.value.trim())
       }
 
       await $fetch(`/api/public/jobs/${jobSlug}/apply`, {
@@ -160,6 +194,7 @@ async function handleSubmit() {
           email: form.value.email.trim(),
           phone: form.value.phone.trim() || undefined,
           website: form.value.website, // honeypot
+          coverLetterText: coverLetterText.value.trim() || undefined,
           responses: responseArray,
         },
       })
@@ -369,6 +404,72 @@ const typeLabels: Record<string, string> = {
                 class="w-full rounded-xl border border-surface-300 dark:border-surface-700 px-3.5 py-2.5 text-sm text-surface-900 dark:text-surface-100 bg-white dark:bg-surface-800 placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-colors"
               />
             </div>
+
+            <!-- Resume / Cover Letter uploads -->
+            <template v-if="job.requireResume || job.requireCoverLetter">
+              <div class="border-t border-surface-100 dark:border-surface-800 pt-5 space-y-5">
+                <!-- Resume -->
+                <div v-if="job.requireResume">
+                  <label for="resume" class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
+                    Resume / CV <span class="text-danger-500">*</span>
+                  </label>
+                  <div
+                    class="relative flex items-center gap-3 rounded-xl border border-dashed px-4 py-3 transition-colors"
+                    :class="errors.resume
+                      ? 'border-danger-300 dark:border-danger-700 bg-danger-50/50 dark:bg-danger-950/20'
+                      : 'border-surface-300 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/50'
+                    "
+                  >
+                    <svg class="size-5 shrink-0 text-surface-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                      <polyline points="14 2 14 8 20 8"/>
+                    </svg>
+                    <div class="flex-1 min-w-0">
+                      <p v-if="resumeFile" class="text-sm text-surface-900 dark:text-surface-100 truncate">{{ resumeFile.name }}</p>
+                      <p v-else class="text-sm text-surface-500">PDF, DOC, or DOCX — max 10 MB</p>
+                    </div>
+                    <label
+                      for="resume"
+                      class="shrink-0 cursor-pointer rounded-lg bg-white dark:bg-surface-700 border border-surface-200 dark:border-surface-600 px-3 py-1.5 text-xs font-medium text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-600 transition-colors"
+                    >
+                      {{ resumeFile ? 'Change' : 'Choose file' }}
+                    </label>
+                    <input
+                      id="resume"
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                      class="sr-only"
+                      @change="(e: Event) => { const t = e.target as HTMLInputElement; resumeFile = t.files?.[0] ?? null; delete errors.resume }"
+                    />
+                  </div>
+                  <p v-if="errors.resume" class="mt-1.5 flex items-center gap-1 text-xs text-danger-600 dark:text-danger-400">
+                    <svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    {{ errors.resume }}
+                  </p>
+                </div>
+
+                <!-- Cover Letter -->
+                <div v-if="job.requireCoverLetter">
+                  <label for="coverLetterText" class="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5">
+                    Cover Letter <span class="text-danger-500">*</span>
+                  </label>
+                  <textarea
+                    id="coverLetterText"
+                    v-model="coverLetterText"
+                    rows="6"
+                    placeholder="Tell us why you're interested in this role…"
+                    class="w-full rounded-xl border px-4 py-3 text-sm text-surface-900 dark:text-surface-100 bg-white dark:bg-surface-800 placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-colors"
+                    :class="errors.coverLetter ? 'border-danger-300 dark:border-danger-700' : 'border-surface-300 dark:border-surface-700'"
+                    @input="delete errors.coverLetter"
+                  />
+                  <p v-if="errors.coverLetter" class="mt-1.5 flex items-center gap-1 text-xs text-danger-600 dark:text-danger-400">
+                    <svg class="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    {{ errors.coverLetter }}
+                  </p>
+                  <p v-else class="mt-1.5 text-xs text-surface-500">Max 10,000 characters.</p>
+                </div>
+              </div>
+            </template>
 
             <!-- Custom questions -->
             <template v-if="job.questions && job.questions.length > 0">

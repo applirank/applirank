@@ -61,7 +61,9 @@ export default defineEventHandler(async (event) => {
   let phone: string | undefined
   let website: string | undefined
   let responseArray: { questionId: string; value: string | string[] | number | boolean }[] = []
+  let coverLetterText: string | undefined
   const uploadedFiles: Map<string, { data: Buffer; filename: string; type?: string }> = new Map()
+  let resumeUpload: { data: Buffer; filename: string; type?: string } | null = null
 
   if (isMultipart) {
     // Parse multipart form data
@@ -75,7 +77,12 @@ export default defineEventHandler(async (event) => {
     for (const part of formData) {
       if (!part.name) continue
 
-      if (part.name.startsWith('file:')) {
+      if (part.name === 'resume') {
+        // Built-in resume file
+        if (part.data && part.filename) {
+          resumeUpload = { data: Buffer.from(part.data), filename: part.filename, type: part.type }
+        }
+      } else if (part.name.startsWith('file:')) {
         // File field: "file:<questionId>"
         const questionId = part.name.slice(5)
         if (part.data && part.filename) {
@@ -108,6 +115,7 @@ export default defineEventHandler(async (event) => {
       email: fields.email?.trim() ?? '',
       phone: fields.phone?.trim() || undefined,
       website: fields.website || undefined,
+      coverLetterText: fields.coverLetterText?.trim() || undefined,
       responses: rawResponses,
     })
 
@@ -116,6 +124,7 @@ export default defineEventHandler(async (event) => {
     email = validated.email
     phone = validated.phone
     website = validated.website
+    coverLetterText = validated.coverLetterText
     responseArray = validated.responses
   } else {
     // Standard JSON body
@@ -125,6 +134,7 @@ export default defineEventHandler(async (event) => {
     email = body.email
     phone = body.phone
     website = body.website
+    coverLetterText = body.coverLetterText
     responseArray = body.responses
   }
 
@@ -140,11 +150,16 @@ export default defineEventHandler(async (event) => {
 
   const existingJob = await db.query.job.findFirst({
     where: and(eq(job.slug, slug), eq(job.status, 'open')),
-    columns: { id: true, organizationId: true },
+    columns: { id: true, organizationId: true, requireResume: true, requireCoverLetter: true },
   })
 
   if (!existingJob) {
     throw createError({ statusCode: 404, statusMessage: 'Job not found or not accepting applications' })
+  }
+
+  // Validate required resume
+  if (existingJob.requireResume && !resumeUpload) {
+    throw createError({ statusCode: 422, statusMessage: 'Resume/CV is required for this position' })
   }
 
   const orgId = existingJob.organizationId
@@ -314,6 +329,7 @@ export default defineEventHandler(async (event) => {
     candidateId,
     jobId,
     status: 'new',
+    coverLetterText: coverLetterText || null,
   }).returning({ id: application.id })
 
   // ─────────────────────────────────────────────
@@ -336,7 +352,9 @@ export default defineEventHandler(async (event) => {
   // ─────────────────────────────────────────────
 
   // Enforce per-candidate document limit (same as authenticated upload)
-  if (uploadedFiles.size > 0) {
+  const builtInFileCount = resumeUpload ? 1 : 0
+  const totalNewFiles = uploadedFiles.size + builtInFileCount
+  if (totalNewFiles > 0) {
     const existingDocCount = await db.$count(
       document,
       and(
@@ -345,7 +363,7 @@ export default defineEventHandler(async (event) => {
       ),
     )
 
-    if (existingDocCount + uploadedFiles.size > MAX_DOCUMENTS_PER_CANDIDATE) {
+    if (existingDocCount + totalNewFiles > MAX_DOCUMENTS_PER_CANDIDATE) {
       throw createError({
         statusCode: 409,
         statusMessage: `Document limit reached. Maximum ${MAX_DOCUMENTS_PER_CANDIDATE} documents per candidate`,
@@ -403,6 +421,66 @@ export default defineEventHandler(async (event) => {
       }
       console.error('[Reqcore] File upload failed during application:', uploadError)
       // Continue processing — don't fail the entire application for a file upload error
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  // 10. Upload built-in resume file
+  // ─────────────────────────────────────────────
+
+  if (resumeUpload) {
+    const file = resumeUpload
+
+    // Validate file size
+    if (file.data.length > MAX_FILE_SIZE) {
+      throw createError({
+        statusCode: 413,
+        statusMessage: `File too large. Maximum size is ${MAX_FILE_SIZE / 1024 / 1024} MB`,
+      })
+    }
+
+    // Validate MIME from magic bytes
+    const detectedType = await fileTypeFromBuffer(file.data)
+    let mimeType = detectedType?.mime
+
+    if (!mimeType) {
+      const OLE2_MAGIC = Buffer.from([0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1])
+      if (file.data.length >= 8 && Buffer.compare(file.data.subarray(0, 8), OLE2_MAGIC) === 0) {
+        mimeType = 'application/msword'
+      }
+    }
+
+    if (!mimeType || !ALLOWED_MIME_TYPES.includes(mimeType as typeof ALLOWED_MIME_TYPES[number])) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: 'Invalid file type for resume. Allowed: PDF, DOC, DOCX',
+      })
+    }
+
+    const docId = crypto.randomUUID()
+    const extension = MIME_TO_EXTENSION[mimeType] ?? 'bin'
+    const storageKey = `${orgId}/${candidateId}/${docId}.${extension}`
+
+    try {
+      await uploadToS3(storageKey, file.data, mimeType)
+
+      await db.insert(document).values({
+        id: docId,
+        organizationId: orgId,
+        candidateId,
+        type: 'resume',
+        storageKey,
+        originalFilename: sanitizeFilename(file.filename),
+        mimeType,
+        sizeBytes: file.data.length,
+      })
+    } catch (uploadError) {
+      try {
+        await deleteFromS3(storageKey)
+      } catch (cleanupError) {
+        console.error('[Reqcore] Failed to clean up orphaned S3 object:', storageKey, cleanupError)
+      }
+      console.error('[Reqcore] Resume upload failed during application:', uploadError)
     }
   }
 

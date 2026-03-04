@@ -22,6 +22,8 @@ export const publicApplicationSchema = z.object({
   email: z.string().email('Invalid email address').max(254),
   phone: z.string().max(50).optional(),
   responses: z.array(questionResponseSchema).default([]),
+  /** Optional cover letter text submitted by the candidate */
+  coverLetterText: z.string().max(10000).optional(),
   /** Honeypot field — bots fill it, humans don't see it. Validated at runtime in the handler. */
   website: z.string().optional(),
 })

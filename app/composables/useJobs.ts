@@ -28,6 +28,8 @@ export function useJobs(options?: {
     description?: string
     location?: string
     type?: 'full_time' | 'part_time' | 'contract' | 'internship'
+    requireResume?: boolean
+    requireCoverLetter?: boolean
   }) {
     try {
       const created = await $fetch('/api/jobs', {

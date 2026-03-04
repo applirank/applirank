@@ -50,6 +50,9 @@ export const job = pgTable('job', {
   salaryUnit: text('salary_unit'),
   remoteStatus: text('remote_status'),
   validThrough: timestamp('valid_through'),
+  // ── Application form settings ──
+  requireResume: boolean('require_resume').notNull().default(false),
+  requireCoverLetter: boolean('require_cover_letter').notNull().default(false),
   // ── Timestamps ──
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
@@ -85,6 +88,7 @@ export const application = pgTable('application', {
   status: applicationStatusEnum('status').notNull().default('new'),
   score: integer('score'),
   notes: text('notes'),
+  coverLetterText: text('cover_letter_text'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 }, (t) => ([

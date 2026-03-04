@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { FileText, Link2, ClipboardCopy } from 'lucide-vue-next'
+import { FileText, Link2, ClipboardCopy, Check } from 'lucide-vue-next'
 
 definePageMeta({
   layout: 'dashboard',
@@ -9,7 +9,7 @@ definePageMeta({
 const route = useRoute()
 const jobId = route.params.id as string
 
-const { job, status: fetchStatus, error } = useJob(jobId)
+const { job, status: fetchStatus, error, updateJob } = useJob(jobId)
 
 useSeoMeta({
   title: computed(() =>
@@ -37,6 +37,34 @@ async function copyApplicationLink() {
   } catch {
     // Fallback for non-HTTPS contexts
     alert(applicationUrl.value)
+  }
+}
+
+// ─────────────────────────────────────────────
+// Application requirements (resume / cover letter)
+// ─────────────────────────────────────────────
+
+const requireResume = ref(false)
+const requireCoverLetter = ref(false)
+const isSavingRequirements = ref(false)
+const requirementsSaved = ref(false)
+
+// Sync with fetched job data
+watch(job, (j) => {
+  if (j) {
+    requireResume.value = j.requireResume ?? false
+    requireCoverLetter.value = j.requireCoverLetter ?? false
+  }
+}, { immediate: true })
+
+async function saveRequirements() {
+  isSavingRequirements.value = true
+  try {
+    await updateJob({ requireResume: requireResume.value, requireCoverLetter: requireCoverLetter.value })
+    requirementsSaved.value = true
+    setTimeout(() => { requirementsSaved.value = false }, 2000)
+  } finally {
+    isSavingRequirements.value = false
   }
 }
 </script>
@@ -94,6 +122,66 @@ async function copyApplicationLink() {
 
       <div v-else class="rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-900 p-4 mb-6 text-sm text-surface-500 dark:text-surface-400">
         The application link will be available when this job is published (status: <strong>open</strong>).
+      </div>
+
+      <!-- Application Requirements -->
+      <div class="rounded-lg border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 p-5 mb-6">
+        <h2 class="text-sm font-semibold text-surface-700 dark:text-surface-300 mb-1">Application requirements</h2>
+        <p class="text-xs text-surface-400 dark:text-surface-500 mb-4">
+          Choose what candidates must provide when applying.
+        </p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+          <button
+            type="button"
+            class="relative flex items-center gap-3 p-4 rounded-xl border text-left transition-colors"
+            :class="requireResume
+              ? 'border-brand-300 dark:border-brand-700 bg-brand-50/70 dark:bg-brand-950/30'
+              : 'border-surface-200 dark:border-surface-800 hover:bg-surface-50 dark:hover:bg-surface-800/50'"
+            :aria-pressed="requireResume"
+            @click="requireResume = !requireResume"
+          >
+            <span
+              v-if="requireResume"
+              class="absolute top-3 right-3 inline-flex items-center justify-center size-5 rounded-full bg-brand-600 text-white"
+              aria-hidden="true"
+            >
+              <Check class="size-3" />
+            </span>
+            <div>
+              <span class="block text-sm font-medium text-surface-900 dark:text-surface-100">Require resume/CV</span>
+              <span class="text-xs text-surface-500">Candidates must upload a file.</span>
+            </div>
+          </button>
+          <button
+            type="button"
+            class="relative flex items-center gap-3 p-4 rounded-xl border text-left transition-colors"
+            :class="requireCoverLetter
+              ? 'border-brand-300 dark:border-brand-700 bg-brand-50/70 dark:bg-brand-950/30'
+              : 'border-surface-200 dark:border-surface-800 hover:bg-surface-50 dark:hover:bg-surface-800/50'"
+            :aria-pressed="requireCoverLetter"
+            @click="requireCoverLetter = !requireCoverLetter"
+          >
+            <span
+              v-if="requireCoverLetter"
+              class="absolute top-3 right-3 inline-flex items-center justify-center size-5 rounded-full bg-brand-600 text-white"
+              aria-hidden="true"
+            >
+              <Check class="size-3" />
+            </span>
+            <div>
+              <span class="block text-sm font-medium text-surface-900 dark:text-surface-100">Ask for cover letter</span>
+              <span class="text-xs text-surface-500">Candidates can write a cover letter.</span>
+            </div>
+          </button>
+        </div>
+        <button
+          type="button"
+          :disabled="isSavingRequirements"
+          class="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50 transition-colors"
+          @click="saveRequirements"
+        >
+          {{ requirementsSaved ? 'Saved!' : isSavingRequirements ? 'Saving…' : 'Save requirements' }}
+        </button>
       </div>
 
       <!-- Application Form Questions -->

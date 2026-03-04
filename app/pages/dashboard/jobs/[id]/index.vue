@@ -2,7 +2,7 @@
 import {
   ArrowLeft, ArrowRight, Briefcase, Clock, Hash, UserRound, Mail, MessageSquare,
   FileText, Paperclip, Download, Eye, Phone, Search, ExternalLink,
-  UserPlus, Pencil, Trash2, MoreHorizontal, Globe, ChevronDown,
+  UserPlus, Pencil, Trash2, MoreHorizontal, Globe, ChevronDown, X,
 } from 'lucide-vue-next'
 import { z } from 'zod'
 import { usePreviewReadOnly } from '~/composables/usePreviewReadOnly'
@@ -353,6 +353,11 @@ function goToNextCard() {
 }
 
 function handleKeyNavigation(event: KeyboardEvent) {
+  if (event.key === 'Escape' && showDocPreview.value) {
+    closeDocPreview()
+    return
+  }
+
   if ((event.target as HTMLElement)?.tagName === 'INPUT' || (event.target as HTMLElement)?.tagName === 'TEXTAREA' || (event.target as HTMLElement)?.tagName === 'SELECT') return
 
   if (event.key === 'ArrowUp') {
@@ -557,6 +562,41 @@ onBeforeUnmount(() => {
 const isLoading = computed(() => {
   return jobFetchStatus.value === 'pending' || appFetchStatus.value === 'pending'
 })
+
+// ─────────────────────────────────────────────
+// Document preview
+// ─────────────────────────────────────────────
+
+const { getPreviewUrl } = useDocuments()
+
+const showDocPreview = ref(false)
+const docPreviewUrl = ref<string | null>(null)
+const docPreviewFilename = ref('')
+const docPreviewMimeType = ref('')
+const docPreviewDocId = ref<string | null>(null)
+
+const isDocPreviewPdf = computed(() => docPreviewMimeType.value === 'application/pdf')
+
+function handleDocPreview(doc: SwipeDocument) {
+  if (doc.mimeType !== 'application/pdf') {
+    // Non-PDFs: fall back to download
+    window.open(`/api/documents/${doc.id}/download`, '_blank')
+    return
+  }
+  docPreviewDocId.value = doc.id
+  docPreviewFilename.value = doc.originalFilename
+  docPreviewMimeType.value = doc.mimeType
+  docPreviewUrl.value = getPreviewUrl(doc.id)
+  showDocPreview.value = true
+}
+
+function closeDocPreview() {
+  showDocPreview.value = false
+  docPreviewUrl.value = null
+  docPreviewFilename.value = ''
+  docPreviewMimeType.value = ''
+  docPreviewDocId.value = null
+}
 </script>
 
 <template>
@@ -1068,15 +1108,13 @@ const isLoading = computed(() => {
                       </div>
                     </div>
                     <div class="flex items-center gap-2">
-                      <a
-                        :href="`/api/documents/${doc.id}/preview`"
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
                         class="inline-flex items-center gap-1.5 rounded-lg border border-surface-200 px-3 py-1.5 text-xs font-medium text-surface-600 hover:bg-surface-50 hover:border-surface-300 dark:border-surface-700 dark:text-surface-300 dark:hover:bg-surface-800 dark:hover:border-surface-600 transition-all duration-150"
+                        @click="handleDocPreview(doc)"
                       >
                         <Eye class="size-3.5" />
                         Preview
-                      </a>
+                      </button>
                       <a
                         :href="`/api/documents/${doc.id}/download`"
                         class="inline-flex items-center gap-1.5 rounded-lg border border-surface-200 px-3 py-1.5 text-xs font-medium text-surface-600 hover:bg-surface-50 hover:border-surface-300 dark:border-surface-700 dark:text-surface-300 dark:hover:bg-surface-800 dark:hover:border-surface-600 transition-all duration-150"
@@ -1250,5 +1288,60 @@ const isLoading = computed(() => {
       @close="showApplyModal = false"
       @created="handleCandidateApplied"
     />
+
+    <!-- Document Preview Modal -->
+    <Teleport to="body">
+      <div v-if="showDocPreview" class="fixed inset-0 z-50 flex items-center justify-center px-4 py-6">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="closeDocPreview" />
+        <div class="relative flex flex-col bg-white dark:bg-surface-900 rounded-2xl shadow-2xl shadow-surface-900/10 dark:shadow-black/30 ring-1 ring-surface-200/80 dark:ring-surface-700/60 w-full max-w-4xl" style="height: calc(100vh - 3rem);">
+          <!-- Header -->
+          <div class="flex items-center justify-between px-5 py-3 border-b border-surface-200/80 dark:border-surface-800/60 shrink-0">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <FileText class="size-4 text-surface-400 shrink-0" />
+              <span class="text-sm font-medium text-surface-800 dark:text-surface-100 truncate">{{ docPreviewFilename }}</span>
+            </div>
+            <div class="flex items-center gap-2 shrink-0 ml-4">
+              <a
+                v-if="docPreviewDocId"
+                :href="`/api/documents/${docPreviewDocId}/download`"
+                class="inline-flex items-center gap-1.5 rounded-lg border border-surface-200 px-2.5 py-1.5 text-xs font-medium text-surface-600 hover:bg-surface-50 hover:border-surface-300 dark:border-surface-700 dark:text-surface-300 dark:hover:bg-surface-800 transition-all duration-150"
+              >
+                <Download class="size-3.5" />
+                Download
+              </a>
+              <button
+                class="rounded-lg p-1.5 text-surface-500 hover:text-surface-700 hover:bg-surface-100 dark:hover:text-surface-300 dark:hover:bg-surface-800 transition-colors"
+                title="Close"
+                @click="closeDocPreview"
+              >
+                <X class="size-4" />
+              </button>
+            </div>
+          </div>
+          <!-- PDF viewer -->
+          <iframe
+            v-if="docPreviewUrl && isDocPreviewPdf"
+            :src="docPreviewUrl"
+            class="flex-1 w-full rounded-b-2xl min-h-0"
+            title="Document preview"
+          />
+          <!-- Non-PDF fallback -->
+          <div v-else class="flex-1 flex items-center justify-center p-8 text-center">
+            <div>
+              <FileText class="size-12 text-surface-300 dark:text-surface-600 mx-auto mb-3" />
+              <p class="text-sm font-medium text-surface-600 dark:text-surface-300">Preview not available for this file type</p>
+              <a
+                v-if="docPreviewDocId"
+                :href="`/api/documents/${docPreviewDocId}/download`"
+                class="mt-3 inline-flex items-center gap-1.5 text-sm text-brand-600 hover:text-brand-700 dark:text-brand-400 font-medium"
+              >
+                <Download class="size-3.5" />
+                Download instead
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>

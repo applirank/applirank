@@ -10,6 +10,15 @@ import {
   GripVertical,
   Link2,
   ClipboardCopy,
+  Rocket,
+  FileEdit,
+  ExternalLink,
+  PartyPopper,
+  Copy,
+  Eye,
+  Briefcase,
+  FileText,
+  MessageSquare,
 } from 'lucide-vue-next'
 import { z } from 'zod'
 
@@ -47,11 +56,12 @@ type DraftQuestion = {
 }
 
 // Wizard state
-const currentStep = ref<1 | 2 | 3>(1)
+const currentStep = ref<1 | 2 | 3 | 4>(1)
 const steps = [
   { id: 1, title: 'Job details', description: 'Tell applicants about this role.' },
   { id: 2, title: 'Application form', description: 'Design the application form.' },
   { id: 3, title: 'Find candidates', description: 'Post on job boards, engage recruiters.' },
+  { id: 4, title: 'Publish & share', description: 'Go live and share with candidates.' },
 ]
 
 // Step 1: Job details (API-supported fields)
@@ -86,6 +96,14 @@ const linkCopied = ref(false)
 const questionActionError = ref<string | null>(null)
 const nextQuestionId = ref(1)
 
+// Step 4: Publish & Share
+const publishChoice = ref<'publish' | 'draft'>('publish')
+const isPublished = ref(false)
+const createdJobSlug = ref('')
+const createdJobId = ref('')
+const finalApplicationLink = ref('')
+const linkCopiedFinal = ref(false)
+
 // Validation (only Step 1 is required to submit)
 const formSchema = z.object({
   title: z
@@ -117,7 +135,7 @@ const canGoNext = computed(() => {
 })
 
 function nextStep() {
-  if (currentStep.value < 3) {
+  if (currentStep.value < 4) {
     if (currentStep.value === 1 && !validateStep1()) return
     currentStep.value++
   }
@@ -240,7 +258,7 @@ function removeSkill(index: number) {
   findCandidates.value.skills.splice(index, 1)
 }
 
-async function handleSubmit() {
+async function handleSubmit(mode: 'publish' | 'draft' = publishChoice.value) {
   submitError.value = null
   // Ensure step 1 is valid before submit
   if (!validateStep1()) {
@@ -255,6 +273,8 @@ async function handleSubmit() {
       description: form.value.description || undefined,
       location: form.value.location || undefined,
       type: form.value.type,
+      requireResume: applicationForm.value.requireResume,
+      requireCoverLetter: applicationForm.value.requireCoverLetter,
     })
 
     if (applicationForm.value.questions.length > 0 && created?.id) {
@@ -275,11 +295,49 @@ async function handleSubmit() {
       )
     }
 
-    await navigateTo(localePath('/dashboard'))
+    if (mode === 'publish' && created?.id) {
+      // Publish the job immediately
+      await $fetch(`/api/jobs/${created.id}`, {
+        method: 'PATCH',
+        body: { status: 'open' },
+      })
+
+      // Build the real application link
+      const base = `${requestUrl.protocol}//${requestUrl.host}`
+      const slug = created.slug || created.id
+      finalApplicationLink.value = `${base}/jobs/${slug}/apply`
+      createdJobSlug.value = slug
+      createdJobId.value = created.id
+
+      // Auto-copy to clipboard
+      try {
+        await navigator.clipboard.writeText(finalApplicationLink.value)
+        linkCopiedFinal.value = true
+        setTimeout(() => { linkCopiedFinal.value = false }, 3000)
+      } catch {
+        // Clipboard may not be available
+      }
+
+      isPublished.value = true
+    } else {
+      // Saved as draft — go to dashboard
+      await navigateTo(localePath('/dashboard'))
+    }
   } catch (err: any) {
     submitError.value = err?.data?.statusMessage ?? 'Something went wrong'
   } finally {
     isSubmitting.value = false
+  }
+}
+
+async function copyFinalLink() {
+  try {
+    await navigator.clipboard.writeText(finalApplicationLink.value)
+    linkCopiedFinal.value = true
+    setTimeout(() => { linkCopiedFinal.value = false }, 3000)
+  } catch {
+    // fallback
+    alert(finalApplicationLink.value)
   }
 }
 
@@ -317,30 +375,23 @@ const questionTypeLabels: Record<QuestionType, string> = {
         </NuxtLink>
         <h1 class="text-3xl font-bold text-surface-900 dark:text-surface-100">New Job</h1>
       </div>
-      <div class="flex items-center gap-3">
+      <div v-if="!isPublished" class="flex items-center gap-3">
         <button
           type="button"
           class="px-4 py-2 text-sm font-medium text-surface-700 dark:text-surface-300 bg-white dark:bg-surface-900 border border-surface-300 dark:border-surface-700 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors"
+          @click="handleSubmit('draft')"
+          :disabled="isSubmitting"
         >
           Save draft
         </button>
         <button
-          v-if="currentStep < 3"
+          v-if="currentStep < 4"
           type="button"
           :disabled="!canGoNext"
           @click="nextStep"
           class="px-4 py-2 text-sm font-medium text-white bg-brand-600 rounded-lg hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
         >
           Save & continue
-        </button>
-        <button
-          v-else
-          type="button"
-          :disabled="isSubmitting"
-          @click="handleSubmit"
-          class="px-4 py-2 text-sm font-medium text-white bg-brand-600 rounded-lg hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
-        >
-          {{ isSubmitting ? 'Creating...' : 'Create job' }}
         </button>
       </div>
     </div>
@@ -371,7 +422,7 @@ const questionTypeLabels: Record<QuestionType, string> = {
                 {{ step.title }}
               </span>
             </div>
-            <p class="text-xs leading-relaxed text-surface-500 dark:text-surface-400 pl-11">
+            <p class="text-xs leading-relaxed text-surface-500 dark:text-surface-400 pl-11 min-h-[2.5rem]">
               {{ step.description }}
             </p>
           </div>
@@ -396,7 +447,7 @@ const questionTypeLabels: Record<QuestionType, string> = {
         </div>
 
         <div class="rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-sm overflow-hidden">
-          <form @submit.prevent="handleSubmit" class="p-6 md:p-8">
+          <form @submit.prevent="() => handleSubmit()" class="p-6 md:p-8">
             <!-- Step 1: Job details -->
             <section v-if="currentStep === 1" class="space-y-10">
               <!-- Section: Job title and department -->
@@ -658,7 +709,7 @@ const questionTypeLabels: Record<QuestionType, string> = {
             </section>
 
             <!-- Step 3: Find candidates -->
-            <section v-else class="space-y-8">
+            <section v-else-if="currentStep === 3" class="space-y-8">
               <div>
                 <h2 class="text-lg font-semibold text-surface-900 dark:text-surface-100 mb-6 pb-2 border-b border-surface-100 dark:border-surface-800">Targeting details</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -732,8 +783,164 @@ const questionTypeLabels: Record<QuestionType, string> = {
               </div>
             </section>
 
+            <!-- Step 4: Publish & Share -->
+            <section v-else-if="currentStep === 4" class="space-y-8">
+              <!-- Success state after publishing -->
+              <div v-if="isPublished" class="text-center py-8">
+                <div class="inline-flex items-center justify-center size-16 rounded-full bg-success-100 dark:bg-success-900/30 mb-6">
+                  <PartyPopper class="size-8 text-success-600 dark:text-success-400" />
+                </div>
+                <h2 class="text-2xl font-bold text-surface-900 dark:text-surface-100 mb-2">Your job is live!</h2>
+                <p class="text-sm text-surface-500 dark:text-surface-400 max-w-md mx-auto mb-8">
+                  <strong>{{ form.title }}</strong> has been published and the application link has been copied to your clipboard.
+                </p>
+
+                <!-- Application link card -->
+                <div class="mx-auto max-w-lg rounded-xl border border-brand-200 dark:border-brand-800 bg-brand-50 dark:bg-brand-950 p-5 mb-8">
+                  <div class="flex items-center justify-center gap-2 mb-3">
+                    <Link2 class="size-4 text-brand-600 dark:text-brand-400" />
+                    <span class="text-sm font-semibold text-brand-700 dark:text-brand-300">Application Link</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <input
+                      type="text"
+                      readonly
+                      :value="finalApplicationLink"
+                      class="flex-1 rounded-lg border border-brand-200 dark:border-brand-800 bg-white dark:bg-surface-900 px-3 py-2 text-sm text-surface-700 dark:text-surface-300 select-all text-center"
+                    />
+                    <button
+                      type="button"
+                      class="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 transition-colors"
+                      @click="copyFinalLink"
+                    >
+                      <Copy class="size-3.5" />
+                      {{ linkCopiedFinal ? 'Copied!' : 'Copy' }}
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Action buttons -->
+                <div class="flex items-center justify-center gap-3">
+                  <NuxtLink
+                    :to="finalApplicationLink"
+                    target="_blank"
+                    class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-surface-700 dark:text-surface-300 bg-white dark:bg-surface-900 border border-surface-300 dark:border-surface-700 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors"
+                  >
+                    <ExternalLink class="size-4" />
+                    Preview form
+                  </NuxtLink>
+                  <NuxtLink
+                    :to="$localePath(`/dashboard/jobs/${createdJobId}`)"
+                    class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-surface-700 dark:text-surface-300 bg-white dark:bg-surface-900 border border-surface-300 dark:border-surface-700 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors"
+                  >
+                    <Eye class="size-4" />
+                    View job
+                  </NuxtLink>
+                  <NuxtLink
+                    :to="$localePath('/dashboard')"
+                    class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-brand-600 rounded-lg hover:bg-brand-700 transition-colors shadow-sm"
+                  >
+                    Go to dashboard
+                  </NuxtLink>
+                </div>
+              </div>
+
+              <!-- Pre-publish state: choose publish or draft -->
+              <div v-else>
+                <h2 class="text-lg font-semibold text-surface-900 dark:text-surface-100 mb-2 pb-2 border-b border-surface-100 dark:border-surface-800">Ready to go?</h2>
+                <p class="text-sm text-surface-500 dark:text-surface-400 mb-6">
+                  Choose how you'd like to save this job. You can always change the status later from the job detail page.
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                  <!-- Publish now option -->
+                  <button
+                    type="button"
+                    class="relative flex flex-col items-start gap-3 p-5 rounded-xl border-2 text-left transition-all"
+                    :class="publishChoice === 'publish'
+                      ? 'border-brand-500 dark:border-brand-400 bg-brand-50/70 dark:bg-brand-950/30 ring-2 ring-brand-200 dark:ring-brand-900'
+                      : 'border-surface-200 dark:border-surface-800 hover:border-surface-300 dark:hover:border-surface-700 hover:bg-surface-50 dark:hover:bg-surface-800/50'"
+                    @click="publishChoice = 'publish'"
+                  >
+                    <span
+                      v-if="publishChoice === 'publish'"
+                      class="absolute top-3 right-3 inline-flex items-center justify-center size-5 rounded-full bg-brand-600 text-white"
+                    >
+                      <Check class="size-3" />
+                    </span>
+                    <div class="inline-flex items-center justify-center size-10 rounded-lg bg-brand-100 dark:bg-brand-900/50">
+                      <Rocket class="size-5 text-brand-600 dark:text-brand-400" />
+                    </div>
+                    <div>
+                      <span class="block text-sm font-semibold text-surface-900 dark:text-surface-100">Publish now</span>
+                      <span class="text-xs text-surface-500 dark:text-surface-400 mt-1 block leading-relaxed">
+                        Your job goes live immediately. The application link will be copied to your clipboard so you can share it right away.
+                      </span>
+                    </div>
+                  </button>
+
+                  <!-- Save as draft option -->
+                  <button
+                    type="button"
+                    class="relative flex flex-col items-start gap-3 p-5 rounded-xl border-2 text-left transition-all"
+                    :class="publishChoice === 'draft'
+                      ? 'border-brand-500 dark:border-brand-400 bg-brand-50/70 dark:bg-brand-950/30 ring-2 ring-brand-200 dark:ring-brand-900'
+                      : 'border-surface-200 dark:border-surface-800 hover:border-surface-300 dark:hover:border-surface-700 hover:bg-surface-50 dark:hover:bg-surface-800/50'"
+                    @click="publishChoice = 'draft'"
+                  >
+                    <span
+                      v-if="publishChoice === 'draft'"
+                      class="absolute top-3 right-3 inline-flex items-center justify-center size-5 rounded-full bg-brand-600 text-white"
+                    >
+                      <Check class="size-3" />
+                    </span>
+                    <div class="inline-flex items-center justify-center size-10 rounded-lg bg-surface-100 dark:bg-surface-800">
+                      <FileEdit class="size-5 text-surface-500 dark:text-surface-400" />
+                    </div>
+                    <div>
+                      <span class="block text-sm font-semibold text-surface-900 dark:text-surface-100">Save as draft</span>
+                      <span class="text-xs text-surface-500 dark:text-surface-400 mt-1 block leading-relaxed">
+                        Save for later review. The job won't be visible to candidates until you publish it.
+                      </span>
+                    </div>
+                  </button>
+                </div>
+
+                <!-- Summary of what was configured -->
+                <div class="rounded-xl border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-900/50 p-5">
+                  <h3 class="text-sm font-semibold text-surface-700 dark:text-surface-300 mb-4">Job summary</h3>
+                  <dl class="space-y-3 text-sm">
+                    <div class="flex items-start gap-3">
+                      <dt class="flex items-center gap-1.5 text-surface-500 dark:text-surface-400 shrink-0 w-32">
+                        <Briefcase class="size-3.5" /> Title
+                      </dt>
+                      <dd class="text-surface-900 dark:text-surface-100 font-medium">{{ form.title }}</dd>
+                    </div>
+                    <div v-if="form.location" class="flex items-start gap-3">
+                      <dt class="flex items-center gap-1.5 text-surface-500 dark:text-surface-400 shrink-0 w-32">
+                        <Link2 class="size-3.5" /> Location
+                      </dt>
+                      <dd class="text-surface-900 dark:text-surface-100">{{ form.location }}</dd>
+                    </div>
+                    <div class="flex items-start gap-3">
+                      <dt class="flex items-center gap-1.5 text-surface-500 dark:text-surface-400 shrink-0 w-32">
+                        <FileText class="size-3.5" /> Resume
+                      </dt>
+                      <dd class="text-surface-900 dark:text-surface-100">{{ applicationForm.requireResume ? 'Required' : 'Optional' }}</dd>
+                    </div>
+                    <div class="flex items-start gap-3">
+                      <dt class="flex items-center gap-1.5 text-surface-500 dark:text-surface-400 shrink-0 w-32">
+                        <MessageSquare class="size-3.5" /> Questions
+                      </dt>
+                      <dd class="text-surface-900 dark:text-surface-100">{{ applicationForm.questions.length }} custom {{ applicationForm.questions.length === 1 ? 'question' : 'questions' }}</dd>
+                    </div>
+                  </dl>
+                </div>
+              </div>
+            </section>
+
             <!-- Actions Footer -->
-            <div class="flex items-center justify-between mt-12 pt-8 border-t border-surface-100 dark:border-surface-800">
+            <div v-if="!isPublished" class="flex items-center justify-between mt-12 pt-8 border-t border-surface-100 dark:border-surface-800">
               <NuxtLink
                 :to="$localePath('/dashboard')"
                 class="px-6 py-2.5 text-sm font-medium text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors"
@@ -751,7 +958,7 @@ const questionTypeLabels: Record<QuestionType, string> = {
                   Back
                 </button>
                 <button
-                  v-if="currentStep < 3"
+                  v-if="currentStep < 4"
                   type="button"
                   :disabled="!canGoNext"
                   @click="nextStep"
@@ -763,9 +970,16 @@ const questionTypeLabels: Record<QuestionType, string> = {
                   v-else
                   type="submit"
                   :disabled="isSubmitting"
-                  class="px-8 py-2.5 text-sm font-medium text-white bg-brand-600 rounded-lg hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+                  class="inline-flex items-center gap-2 px-8 py-2.5 text-sm font-medium text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+                  :class="publishChoice === 'publish' ? 'bg-brand-600 hover:bg-brand-700' : 'bg-surface-600 hover:bg-surface-700'"
+                  @click="handleSubmit()"
                 >
-                  {{ isSubmitting ? 'Creating...' : 'Create job' }}
+                  <Rocket v-if="publishChoice === 'publish'" class="size-4" />
+                  <FileEdit v-else class="size-4" />
+                  {{ isSubmitting
+                    ? (publishChoice === 'publish' ? 'Publishing...' : 'Saving...')
+                    : (publishChoice === 'publish' ? 'Publish & copy link' : 'Save as draft')
+                  }}
                 </button>
               </div>
             </div>
@@ -798,6 +1012,18 @@ const questionTypeLabels: Record<QuestionType, string> = {
               <li v-if="currentStep === 3" class="text-sm text-surface-600 dark:text-surface-400 leading-relaxed">
                 <p class="font-medium text-surface-900 dark:text-surface-100 mb-1">Be specific with skills</p>
                 Adding specific skills helps our AI better match candidates to your role.
+              </li>
+              <li v-if="currentStep === 4" class="text-sm text-surface-600 dark:text-surface-400 leading-relaxed">
+                <p class="font-medium text-surface-900 dark:text-surface-100 mb-1">Publish when ready</p>
+                Publishing makes the job visible to candidates. You can unpublish at any time from the job settings.
+              </li>
+              <li v-if="currentStep === 4" class="text-sm text-surface-600 dark:text-surface-400 leading-relaxed">
+                <p class="font-medium text-surface-900 dark:text-surface-100 mb-1">Share the link</p>
+                After publishing, the application link is automatically copied. Paste it in emails, Slack, or social media.
+              </li>
+              <li v-if="currentStep === 4" class="text-sm text-surface-600 dark:text-surface-400 leading-relaxed">
+                <p class="font-medium text-surface-900 dark:text-surface-100 mb-1">Drafts are private</p>
+                Draft jobs are only visible to your team. Candidates cannot see or apply to draft jobs.
               </li>
             </ul>
           </div>

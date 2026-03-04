@@ -25,6 +25,8 @@ export default defineEventHandler(async (event) => {
     salaryUnit: body.salaryUnit,
     remoteStatus: body.remoteStatus,
     validThrough: body.validThrough,
+    requireResume: body.requireResume,
+    requireCoverLetter: body.requireCoverLetter,
   }).returning({
     id: job.id,
     title: job.title,
@@ -39,6 +41,8 @@ export default defineEventHandler(async (event) => {
     salaryUnit: job.salaryUnit,
     remoteStatus: job.remoteStatus,
     validThrough: job.validThrough,
+    requireResume: job.requireResume,
+    requireCoverLetter: job.requireCoverLetter,
     createdAt: job.createdAt,
     updatedAt: job.updatedAt,
   })

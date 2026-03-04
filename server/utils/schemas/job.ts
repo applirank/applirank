@@ -23,10 +23,27 @@ export const createJobSchema = z.object({
   remoteStatus: z.enum(['remote', 'hybrid', 'onsite']).optional(),
   /** When this job listing expires (required for Google Jobs rich results) */
   validThrough: z.coerce.date().optional(),
+  /** Whether the application form requires a resume/CV upload */
+  requireResume: z.boolean().optional().default(false),
+  /** Whether the application form asks for a cover letter upload */
+  requireCoverLetter: z.boolean().optional().default(false),
 })
 
-/** Schema for updating an existing job (all fields optional, includes status) */
-export const updateJobSchema = createJobSchema.partial().extend({
+/** Schema for updating an existing job (all fields optional, no defaults — PATCH semantics) */
+export const updateJobSchema = z.object({
+  title: z.string().min(1, 'Title is required').max(200).optional(),
+  description: z.string().optional(),
+  location: z.string().optional(),
+  type: z.enum(['full_time', 'part_time', 'contract', 'internship']).optional(),
+  slug: z.string().max(80).optional(),
+  salaryMin: z.coerce.number().int().min(0).optional(),
+  salaryMax: z.coerce.number().int().min(0).optional(),
+  salaryCurrency: z.string().length(3).optional(),
+  salaryUnit: z.enum(['YEAR', 'MONTH', 'HOUR']).optional(),
+  remoteStatus: z.enum(['remote', 'hybrid', 'onsite']).optional(),
+  validThrough: z.coerce.date().optional(),
+  requireResume: z.boolean().optional(),
+  requireCoverLetter: z.boolean().optional(),
   status: z.enum(['draft', 'open', 'closed', 'archived']).optional(),
 })
 
