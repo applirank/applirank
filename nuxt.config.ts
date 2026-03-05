@@ -190,9 +190,6 @@ export default defineNuxtConfig({
   // ─────────────────────────────────────────────
   content: {
     // content.config.ts handles collection definitions
-    highlight: {
-      theme: 'github-dark-high-contrast',
-    },
   },
 
   nitro: {
