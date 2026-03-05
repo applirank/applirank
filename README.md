@@ -144,6 +144,38 @@ Then sign in with:
 
 ---
 
+### Updating to a new release
+
+When a new version of Reqcore is released, follow these steps **in order** to update your instance. Your data is safe — updates never delete the database or your uploaded files.
+
+**Step 1 — Pull the latest code**
+
+```bash
+git pull origin main
+```
+
+**Step 2 — Rebuild and restart the app**
+
+```bash
+docker compose up --build -d
+```
+
+This rebuilds the app image with the new code, applies any new database migrations automatically on startup, and restarts in the background. The whole process typically takes under a minute.
+
+**Step 3 — Verify it's running**
+
+```bash
+docker compose logs app --tail 20
+```
+
+Look for `Listening on http://[::]:3000`. Then open [http://localhost:3000](http://localhost:3000) — you're on the latest version.
+
+> **Something wrong after an update?** Roll back by running `git checkout <previous-commit>` and then `docker compose up --build -d`.
+
+> **To find the latest release notes**, check the [CHANGELOG](CHANGELOG.md) or [GitHub Releases](https://github.com/reqcore-inc/reqcore/releases).
+
+---
+
 ### Managing your instance
 
 ```bash
