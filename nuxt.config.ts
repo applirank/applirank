@@ -119,6 +119,8 @@ export default defineNuxtConfig({
       giscusRepoId: process.env.NUXT_PUBLIC_GISCUS_REPO_ID || '',
       /** Giscus GitHub Discussions category node ID (required for the comments widget) */
       giscusCategoryId: process.env.NUXT_PUBLIC_GISCUS_CATEGORY_ID || '',
+      /** URL for the documentation site — override with NUXT_PUBLIC_DOCS_URL in .env for local dev */
+      docsUrl: process.env.NUXT_PUBLIC_DOCS_URL || 'https://docs.reqcore.com',
     },
   },
 

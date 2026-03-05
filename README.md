@@ -9,7 +9,7 @@
 [![PR Validation](https://github.com/reqcore-inc/reqcore/actions/workflows/pr-validation.yml/badge.svg)](https://github.com/reqcore-inc/reqcore/actions/workflows/pr-validation.yml)
 [![Docker Integration](https://github.com/reqcore-inc/reqcore/actions/workflows/docker-readme-validation.yml/badge.svg)](https://github.com/reqcore-inc/reqcore/actions/workflows/docker-readme-validation.yml)
 
-[Live Demo](https://reqcore.com) · [Documentation](ARCHITECTURE.md) · [Roadmap](ROADMAP.md) · [Report Bug](https://github.com/reqcore-inc/reqcore/issues/new)
+[Live Demo](https://reqcore.com) · [Documentation](https://docs.reqcore.com) · [Roadmap](ROADMAP.md) · [Report Bug](https://github.com/reqcore-inc/reqcore/issues/new)
 
 
 <a href="https://openalternative.co/reqcore?utm_source=openalternative&utm_medium=badge&utm_campaign=embed&utm_content=tool-reqcore" target="_blank"><img src="https://openalternative.co/reqcore/badge.svg?theme=dark&width=200&height=50" width="200" height="50" alt="Reqcore badge" loading="lazy" /></a>

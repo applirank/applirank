@@ -1,0 +1,16 @@
+{
+  "name": "reqcore-docs",
+  "description": "Official documentation for Reqcore — the open-source ATS.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "preview": "nuxt preview"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.6.2",
+    "docus": "^5.7.0",
+    "nuxt": "^4.3.1"
+  }
+}

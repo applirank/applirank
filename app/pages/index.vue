@@ -30,6 +30,7 @@ import {
 } from 'lucide-vue-next'
 
 const { t } = useI18n()
+const config = useRuntimeConfig()
 
 useSeoMeta({
   title: 'Open-Source Applicant Tracking System — Self-Hosted ATS',
@@ -137,6 +138,14 @@ const ctaRef = useScrollFade()
           >
             {{ t('home.nav.blog') }}
           </NuxtLink>
+          <a
+            :href="config.public.docsUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="rounded-md px-3 py-1.5 text-[13px] font-medium text-surface-400 transition hover:text-white"
+          >
+            {{ t('home.nav.docs') }}
+          </a>
           <a
             href="https://github.com/reqcore-inc/reqcore"
             target="_blank"

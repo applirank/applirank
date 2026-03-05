@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+
+# Nuxt
+.nuxt/
+.output/
+.data/
+
+# IDE
+.idea/
+.vscode/
+
+# Build
+dist/
+
+# Environment
+.env
+
+# OS
+.DS_Store
+Thumbs.db
