@@ -10,6 +10,7 @@ useSeoMeta({
   robots: 'noindex, nofollow',
 })
 
+const route = useRoute()
 const name = ref('')
 const email = ref('')
 const password = ref('')
@@ -17,6 +18,9 @@ const confirmPassword = ref('')
 const error = ref('')
 const isLoading = ref(false)
 const localePath = useLocalePath()
+
+// If the user arrived from an invitation link, we'll redirect back after sign-up
+const pendingInvitation = computed(() => route.query.invitation as string | undefined)
 
 async function handleSignUp() {
   error.value = ''
@@ -51,7 +55,14 @@ async function handleSignUp() {
   }
 
   clearNuxtData()
-  await navigateTo(localePath('/onboarding/create-org'))
+
+  // If the user was accepting an invitation, redirect back to accept it
+  if (pendingInvitation.value) {
+    await navigateTo(localePath(`/auth/accept-invitation/${pendingInvitation.value}`))
+  }
+  else {
+    await navigateTo(localePath('/onboarding/create-org'))
+  }
 }
 </script>
 
@@ -116,7 +127,7 @@ async function handleSignUp() {
 
     <p class="text-center text-sm text-surface-500 dark:text-surface-400">
       Already have an account?
-      <NuxtLink :to="$localePath('/auth/sign-in')" class="text-brand-600 dark:text-brand-400 hover:underline">Sign in</NuxtLink>
+      <NuxtLink :to="pendingInvitation ? $localePath(`/auth/sign-in?invitation=${pendingInvitation}`) : $localePath('/auth/sign-in')" class="text-brand-600 dark:text-brand-400 hover:underline">Sign in</NuxtLink>
     </p>
   </form>
 </template>

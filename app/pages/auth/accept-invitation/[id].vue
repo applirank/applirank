@@ -142,13 +142,13 @@ onMounted(() => {
 
     <div class="flex gap-3">
       <NuxtLink
-        :to="localePath('/auth/sign-in')"
+        :to="localePath(`/auth/sign-in?invitation=${invitationId}`)"
         class="flex-1 text-center px-4 py-2.5 bg-brand-600 text-white rounded-md text-sm font-medium hover:bg-brand-700 transition-colors no-underline"
       >
         Sign in
       </NuxtLink>
       <NuxtLink
-        :to="localePath('/auth/sign-up')"
+        :to="localePath(`/auth/sign-up?invitation=${invitationId}`)"
         class="flex-1 text-center px-4 py-2.5 border border-surface-300 dark:border-surface-700 text-surface-700 dark:text-surface-300 rounded-md text-sm font-medium hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors no-underline"
       >
         Create account
