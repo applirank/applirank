@@ -127,7 +127,7 @@ async function handleSignUp() {
 
     <p class="text-center text-sm text-surface-500 dark:text-surface-400">
       Already have an account?
-      <NuxtLink :to="pendingInvitation ? $localePath(`/auth/sign-in?invitation=${pendingInvitation}`) : $localePath('/auth/sign-in')" class="text-brand-600 dark:text-brand-400 hover:underline">Sign in</NuxtLink>
+      <NuxtLink :to="pendingInvitation ? $localePath({ path: '/auth/sign-in', query: { invitation: pendingInvitation } }) : $localePath('/auth/sign-in')" class="text-brand-600 dark:text-brand-400 hover:underline">Sign in</NuxtLink>
     </p>
   </form>
 </template>

@@ -95,7 +95,7 @@ async function handleSignIn() {
 
     <p class="text-center text-sm text-surface-500 dark:text-surface-400">
       Don't have an account?
-      <NuxtLink :to="route.query.invitation ? $localePath(`/auth/sign-up?invitation=${route.query.invitation}`) : $localePath('/auth/sign-up')" class="text-brand-600 dark:text-brand-400 hover:underline">Sign up</NuxtLink>
+      <NuxtLink :to="route.query.invitation ? $localePath({ path: '/auth/sign-up', query: { invitation: route.query.invitation } }) : $localePath('/auth/sign-up')" class="text-brand-600 dark:text-brand-400 hover:underline">Sign up</NuxtLink>
     </p>
   </form>
 </template>
