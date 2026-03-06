@@ -50,8 +50,13 @@ export function useCurrentOrg() {
       throw result.error
     }
 
-    // Better Auth sets the new org as active by default
-    await navigateTo(localePath('/dashboard'))
+    // Explicitly set the new org as active to ensure the session reflects it
+    if (result.data?.id) {
+      await authClient.organization.setActive({ organizationId: result.data.id })
+    }
+
+    // Hard navigation ensures fresh session state is loaded (same pattern as switchOrg)
+    window.location.href = localePath('/dashboard')
   }
 
   // ═══════════════════════════════════════════
