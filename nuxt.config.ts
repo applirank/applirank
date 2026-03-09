@@ -204,6 +204,9 @@ export default defineNuxtConfig({
   // ─────────────────────────────────────────────
   routeRules: {
     // ── PostHog reverse proxy — bypasses ad blockers by routing through reqcore.com ──
+    // NOTE: Targets are hardcoded to the EU data center (eu.i.posthog.com).
+    // If you use the US data center, set POSTHOG_HOST=https://us.i.posthog.com
+    // and update these two proxy targets to us-assets.i.posthog.com / us.i.posthog.com.
     '/ingest/static/**': { proxy: 'https://eu-assets.i.posthog.com/static/**' },
     '/ingest/**': { proxy: 'https://eu.i.posthog.com/**' },
     '/': { prerender: true },
