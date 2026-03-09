@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import {
   BookOpen,
-  Github,
   ChevronRight,
   Download,
   Rocket,
@@ -115,40 +114,7 @@ function getDocIcon(doc: { icon?: string }): LucideIcon {
 <template>
   <div class="relative min-h-screen bg-[#09090b] text-white">
     <!-- ───── Nav ───── -->
-    <nav
-      class="fixed inset-x-0 top-0 z-50 border-b border-white/[0.06] bg-[#09090b]/80 backdrop-blur-xl"
-    >
-      <div class="mx-auto flex h-14 max-w-5xl items-center justify-between px-6">
-        <NuxtLink to="/" class="text-[15px] font-semibold tracking-tight">Reqcore</NuxtLink>
-        <div class="flex items-center gap-5 text-[13px] text-white/60">
-          <NuxtLink to="/roadmap" class="transition hover:text-white">Roadmap</NuxtLink>
-          <NuxtLink to="/catalog" class="transition hover:text-white">Features</NuxtLink>
-          <NuxtLink to="/blog" class="transition hover:text-white">Blog</NuxtLink>
-          <NuxtLink to="/docs" class="text-white transition">Docs</NuxtLink>
-          <a
-            href="https://github.com/reqcore-inc/reqcore"
-            target="_blank"
-            class="transition hover:text-white"
-          >
-            <Github class="size-4" />
-          </a>
-          <NuxtLink
-            v-if="session?.user"
-            to="/dashboard"
-            class="rounded-md bg-white/10 px-3 py-1 text-white transition hover:bg-white/15"
-          >
-            Dashboard
-          </NuxtLink>
-          <NuxtLink
-            v-else
-            to="/auth/sign-in"
-            class="rounded-md bg-white/10 px-3 py-1 text-white transition hover:bg-white/15"
-          >
-            Sign In
-          </NuxtLink>
-        </div>
-      </div>
-    </nav>
+    <PublicNavBar active-page="docs" />
 
     <!-- ───── Hero ───── -->
     <section class="relative overflow-hidden pt-32 pb-16">
