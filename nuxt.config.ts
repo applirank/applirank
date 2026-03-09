@@ -62,7 +62,7 @@ export default defineNuxtConfig({
       disable_session_recording: true,
       enable_recording_console_log: false,
       disable_surveys: true,
-      opt_out_capturing_by_default: false,
+      opt_out_capturing_by_default: true,
       respect_dnt: true,
       secure_cookie: true,
       capture_pageview: true,

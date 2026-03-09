@@ -6,7 +6,7 @@
  * Must be called in `<script setup>` context (not in a plugin).
  */
 export async function usePostHogIdentity() {
-  const { $posthogIdentifyUser, $posthogSetOrganization, $posthogReset } = useNuxtApp()
+  const { $posthogIdentifyUser, $posthogSetOrganization, $posthogReset, $posthogResetGroups } = useNuxtApp()
 
   if (!$posthogIdentifyUser) return
 
@@ -43,6 +43,11 @@ export async function usePostHogIdentity() {
           name: org.name || undefined,
           slug: org.slug || undefined,
         })
+      }
+      else {
+        // Clear org group when user has no active organization to avoid
+        // attributing events to the previously selected org.
+        ($posthogResetGroups as (() => void) | undefined)?.()
       }
     },
     { immediate: true },

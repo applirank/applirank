@@ -19,5 +19,8 @@ await usePostHogIdentity()
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
+    <ClientOnly>
+      <ConsentBanner />
+    </ClientOnly>
   </div>
 </template>

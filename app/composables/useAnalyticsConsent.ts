@@ -20,7 +20,9 @@ export function useAnalyticsConsent() {
 
   const consentState = useState<ConsentState>('analytics-consent', () => {
     if (import.meta.server) return null
-    return (localStorage.getItem(CONSENT_KEY) as ConsentState) || null
+    const stored = localStorage.getItem(CONSENT_KEY)
+    if (stored === 'granted' || stored === 'denied') return stored
+    return null
   })
 
   const hasConsented = computed(() => consentState.value === 'granted')
@@ -43,9 +45,16 @@ export function useAnalyticsConsent() {
     ph?.opt_out_capturing()
   }
 
-  // Apply stored consent on mount
-  if (import.meta.client && consentState.value === 'denied') {
-    ph?.opt_out_capturing()
+  // Apply stored consent on mount.
+  // PostHog defaults to opt_out_capturing_by_default: true (GDPR), so we only
+  // need to explicitly opt-in for users who previously granted consent.
+  if (import.meta.client) {
+    if (consentState.value === 'granted') {
+      ph?.opt_in_capturing()
+    }
+    else {
+      ph?.opt_out_capturing()
+    }
   }
 
   return {

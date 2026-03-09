@@ -55,6 +55,9 @@ export default defineNuxtPlugin({
         posthogReset: () => {
           posthog.reset()
         },
+        posthogResetGroups: () => {
+          posthog.resetGroups()
+        },
       },
     }
   },
