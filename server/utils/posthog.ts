@@ -12,9 +12,8 @@ let client: PostHog | null = null
 export function useServerPostHog(): PostHog | null {
   if (client) return client
 
-  const config = useRuntimeConfig()
-  const publicKey = config.public.posthog?.publicKey
-  const host = config.public.posthog?.host
+  const publicKey = process.env.POSTHOG_PUBLIC_KEY
+  const host = process.env.POSTHOG_HOST
 
   if (!publicKey) {
     return null

@@ -13,6 +13,14 @@ COPY . .
 ARG NUXT_PUBLIC_SITE_URL=http://localhost:3000
 ENV NUXT_PUBLIC_SITE_URL=${NUXT_PUBLIC_SITE_URL}
 
+# PostHog — the @posthog/nuxt module is conditionally loaded at build time.
+# Pass your project API key so the module is included in the production bundle.
+# Railway auto-passes service variables as Docker build args.
+ARG POSTHOG_PUBLIC_KEY
+ENV POSTHOG_PUBLIC_KEY=${POSTHOG_PUBLIC_KEY}
+ARG POSTHOG_HOST
+ENV POSTHOG_HOST=${POSTHOG_HOST}
+
 RUN npm run build
 
 # ─── Stage 2: Run ────────────────────────────────────────────────────────────

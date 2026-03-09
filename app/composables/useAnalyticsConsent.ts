@@ -15,7 +15,7 @@ export function useAnalyticsConsent() {
   // usePostHog() is auto-imported by @posthog/nuxt, but the module is
   // conditionally loaded.  Replicate the safe accessor so this composable
   // works even when PostHog is not configured (CI, self-hosted without key).
-  const posthog = (useNuxtApp() as Record<string, unknown>).$posthog as ((() => { opt_in_capturing: () => void, opt_out_capturing: () => void }) | undefined)
+  const posthog = (useNuxtApp() as Record<string, unknown>).$posthog as ((() => { opt_in_capturing: () => void, opt_out_capturing: () => void, capture: (event: string, properties?: Record<string, unknown>) => void }) | undefined)
   const ph = posthog?.()
 
   const consentState = useState<ConsentState>('analytics-consent', () => null)
@@ -43,6 +43,16 @@ export function useAnalyticsConsent() {
       localStorage.setItem(CONSENT_KEY, 'granted')
     }
     ph?.opt_in_capturing()
+    // Capture the entry-page pageview now that the user has opted in.
+    // PostHog's init-time $pageview was suppressed by opt_out_capturing_by_default,
+    // and subsequent pushState events only fire after this call, so we must
+    // manually send one for the page the user is currently on.
+    if (import.meta.client) {
+      const url = new URL(window.location.href)
+      url.search = ''
+      url.hash = ''
+      ph?.capture('$pageview', { $current_url: url.toString() })
+    }
   }
 
   function declineAnalytics() {

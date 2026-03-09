@@ -21,7 +21,6 @@ const SENSITIVE_URL_PROPS = ['$current_url', '$initial_current_url', '$referrer'
 
 export default defineNuxtPlugin({
   name: 'posthog-identity',
-  parallel: true,
   setup() {
     // usePostHog() is auto-imported by @posthog/nuxt, but the module is
     // conditionally loaded (only when POSTHOG_PUBLIC_KEY is set).  In CI and

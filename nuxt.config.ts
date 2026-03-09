@@ -57,6 +57,10 @@ export default defineNuxtConfig({
     publicKey: process.env.POSTHOG_PUBLIC_KEY || '',
     host: process.env.POSTHOG_HOST || 'https://eu.i.posthog.com',
     clientConfig: {
+      // ── Reverse proxy: route PostHog through reqcore.com to bypass ad blockers ──
+      // Requests to /ingest/** are proxied by Nitro to eu.i.posthog.com
+      api_host: '/ingest',
+      ui_host: 'https://eu.posthog.com',
       // ── Privacy: disable invasive features ──
       autocapture: false,
       disable_session_recording: true,
@@ -117,11 +121,8 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      /** PostHog public key and host for server-side event capture */
-      posthog: {
-        publicKey: process.env.POSTHOG_PUBLIC_KEY || '',
-        host: process.env.POSTHOG_HOST || 'https://eu.i.posthog.com',
-      },
+      // PostHog runtimeConfig is managed by @posthog/nuxt via posthogConfig above.
+      // Override at runtime with NUXT_PUBLIC_POSTHOG_PUBLIC_KEY / NUXT_PUBLIC_POSTHOG_HOST.
       /** When set, the dashboard shows a read-only demo banner for this org slug */
       demoOrgSlug: process.env.DEMO_ORG_SLUG || (isRailwayPreview ? 'reqcore-demo' : ''),
       /** Public live-demo account email used to prefill sign-in */
@@ -202,6 +203,12 @@ export default defineNuxtConfig({
   // Route rules — prerender/ISR for public pages
   // ─────────────────────────────────────────────
   routeRules: {
+    // ── PostHog reverse proxy — bypasses ad blockers by routing through reqcore.com ──
+    // NOTE: Targets are hardcoded to the EU data center (eu.i.posthog.com).
+    // If you use the US data center, set POSTHOG_HOST=https://us.i.posthog.com
+    // and update these two proxy targets to us-assets.i.posthog.com / us.i.posthog.com.
+    '/ingest/static/**': { proxy: 'https://eu-assets.i.posthog.com/static/**' },
+    '/ingest/**': { proxy: 'https://eu.i.posthog.com/**' },
     '/': { prerender: true },
     '/roadmap': { prerender: true },
     '/blog': { prerender: true },
