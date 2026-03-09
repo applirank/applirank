@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import {
-  Github,
   ChevronRight,
   ChevronDown,
   X,
@@ -215,59 +214,7 @@ const stats = computed(() => {
 <template>
   <div class="relative min-h-screen bg-[#09090b] text-white">
     <!-- ───── Nav ───── -->
-    <nav
-      class="fixed inset-x-0 top-0 z-50 border-b border-white/[0.06] bg-[#09090b]/80 backdrop-blur-xl"
-    >
-      <div class="mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
-        <NuxtLink :to="$localePath('/')" class="flex items-center gap-2.5 text-[15px] font-semibold tracking-tight text-white">
-          <span class="flex h-7 w-7 items-center justify-center rounded-md bg-brand-500 text-xs font-black text-white">A</span>
-          Reqcore
-        </NuxtLink>
-        <div class="flex items-center gap-2">
-          <NuxtLink
-            :to="$localePath('/roadmap')"
-            class="hidden rounded-md px-3 py-1.5 text-[13px] font-medium text-surface-400 transition hover:text-white sm:inline-flex"
-          >
-            Roadmap
-          </NuxtLink>
-          <NuxtLink
-            :to="$localePath('/catalog')"
-            class="hidden rounded-md px-3 py-1.5 text-[13px] font-medium text-white transition sm:inline-flex"
-          >
-            Features
-          </NuxtLink>
-          <NuxtLink
-            to="/blog"
-            class="hidden rounded-md px-3 py-1.5 text-[13px] font-medium text-surface-400 transition hover:text-white sm:inline-flex"
-          >
-            Blog
-          </NuxtLink>
-          <a
-            href="https://github.com/reqcore-inc/reqcore"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="hidden items-center gap-1.5 rounded-md px-3 py-1.5 text-[13px] font-medium text-surface-400 transition hover:text-white sm:flex"
-          >
-            <Github class="h-3.5 w-3.5" />
-            GitHub
-          </a>
-          <NuxtLink
-            v-if="session?.user"
-            :to="$localePath('/dashboard')"
-            class="rounded-md bg-white px-3.5 py-1.5 text-[13px] font-semibold text-[#09090b] transition hover:bg-white/90"
-          >
-            Dashboard
-          </NuxtLink>
-          <NuxtLink
-            v-else
-            :to="$localePath('/auth/sign-in')"
-            class="rounded-md bg-white/10 px-3 py-1.5 text-[13px] font-medium text-white transition hover:bg-white/15"
-          >
-            Sign In
-          </NuxtLink>
-        </div>
-      </div>
-    </nav>
+    <PublicNavBar active-page="features" />
 
     <!-- ───── Hero ───── -->
     <section class="relative overflow-hidden pt-28 pb-10">

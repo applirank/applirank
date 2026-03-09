@@ -8,6 +8,9 @@ useHead(() => ({
   link: i18nHead.value.link,
   meta: i18nHead.value.meta,
 }))
+
+// Sync Better Auth session → PostHog identity & org group
+await usePostHogIdentity()
 </script>
 
 <template>
@@ -16,5 +19,8 @@ useHead(() => ({
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
+    <ClientOnly>
+      <ConsentBanner />
+    </ClientOnly>
   </div>
 </template>

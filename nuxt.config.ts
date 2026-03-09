@@ -39,9 +39,39 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
 
-  modules: ['@nuxtjs/i18n', '@nuxtjs/seo', '@nuxt/content'],
+  modules: [
+    '@nuxtjs/i18n',
+    '@nuxtjs/seo',
+    '@nuxt/content',
+    // Only load PostHog module when the API key is available;
+    // the SDK crashes during prerender/build if the key is empty.
+    ...(process.env.POSTHOG_PUBLIC_KEY ? ['@posthog/nuxt' as const] : []),
+  ],
 
   css: ['~/assets/css/main.css'],
+
+  // ─────────────────────────────────────────────
+  // PostHog — privacy-focused product analytics & feature flags
+  // ─────────────────────────────────────────────
+  posthogConfig: {
+    publicKey: process.env.POSTHOG_PUBLIC_KEY || '',
+    host: process.env.POSTHOG_HOST || 'https://eu.i.posthog.com',
+    clientConfig: {
+      // ── Privacy: disable invasive features ──
+      autocapture: false,
+      disable_session_recording: true,
+      enable_recording_console_log: false,
+      disable_surveys: true,
+      opt_out_capturing_by_default: true,
+      respect_dnt: true,
+      secure_cookie: true,
+      capture_pageview: true,
+      capture_pageleave: true,
+      // ── Persistence ──
+      persistence: 'localStorage+cookie',
+      cross_subdomain_cookie: false,
+    },
+  },
 
   i18n: {
     baseUrl: siteUrl,
@@ -81,18 +111,17 @@ export default defineNuxtConfig({
       meta: [
         { name: 'theme-color', content: '#09090b' },
       ],
-      script: [
-        {
-          defer: true,
-          'data-domain': 'reqcore.com',
-          src: 'https://test-plausible.kjadfu.easypanel.host/js/script.js',
-        },
-      ],
+      // Plausible removed — PostHog handles all analytics
     },
   },
 
   runtimeConfig: {
     public: {
+      /** PostHog public key and host for server-side event capture */
+      posthog: {
+        publicKey: process.env.POSTHOG_PUBLIC_KEY || '',
+        host: process.env.POSTHOG_HOST || 'https://eu.i.posthog.com',
+      },
       /** When set, the dashboard shows a read-only demo banner for this org slug */
       demoOrgSlug: process.env.DEMO_ORG_SLUG || (isRailwayPreview ? 'reqcore-demo' : ''),
       /** Public live-demo account email used to prefill sign-in */

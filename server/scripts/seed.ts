@@ -39,7 +39,31 @@ if (!process.env.DATABASE_URL && typeof processWithLoadEnv.loadEnvFile === 'func
   }
 }
 
-const DATABASE_URL = process.env.DATABASE_URL
+function resolveDatabaseUrl(): string {
+  const raw = process.env.DATABASE_URL ?? ''
+
+  try {
+    const parsed = new URL(raw)
+    if (parsed.hostname) return raw
+  }
+  catch {
+    // fall through to individual-variable reconstruction
+  }
+
+  const host = process.env.PGHOST ?? process.env.RAILWAY_TCP_PROXY_DOMAIN ?? ''
+  const port = process.env.PGPORT ?? process.env.RAILWAY_TCP_PROXY_PORT ?? '5432'
+  const user = process.env.PGUSER ?? 'postgres'
+  const password = process.env.PGPASSWORD ?? ''
+  const database = process.env.PGDATABASE ?? 'railway'
+
+  if (host) {
+    return `postgresql://${encodeURIComponent(user)}:${encodeURIComponent(password)}@${host}:${port}/${database}`
+  }
+
+  return ''
+}
+
+const DATABASE_URL = resolveDatabaseUrl()
 if (!DATABASE_URL) {
   console.error('DATABASE_URL is required. Set it in .env or export it.')
   process.exit(1)

@@ -9,6 +9,7 @@ import {
   Briefcase,
   Layers,
   Code,
+  Scale,
   type LucideIcon,
 } from 'lucide-vue-next'
 
@@ -87,6 +88,7 @@ const sectionIcons: Record<string, LucideIcon> = {
   'Features': Briefcase,
   'Architecture': Layers,
   'Contributing': Code,
+  'Legal': Scale,
 }
 
 const sidebarSections = computed<SidebarSection[]>(() => {
