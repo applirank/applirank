@@ -30,6 +30,7 @@ const form = reactive({
 
 const errors = ref<Record<string, string>>({})
 const isSubmitting = ref(false)
+const sendInvitationAfter = ref(false)
 
 // Set a sensible default title
 // Helper to extract YYYY-MM-DD from a Date object
@@ -199,7 +200,7 @@ async function handleSubmit() {
   try {
     const filteredInterviewers = form.interviewers.filter(i => i.trim())
 
-    await $fetch('/api/interviews', {
+    const created = await $fetch('/api/interviews', {
       method: 'POST',
       body: {
         applicationId: props.applicationId,
@@ -212,6 +213,19 @@ async function handleSubmit() {
         interviewers: filteredInterviewers.length > 0 ? filteredInterviewers : undefined,
       },
     })
+
+    // Optionally send invitation email immediately
+    if (sendInvitationAfter.value && created?.id) {
+      try {
+        await $fetch(`/api/interviews/${created.id}/send-invitation`, {
+          method: 'POST',
+          body: { templateId: 'system-standard' },
+        })
+      } catch {
+        // Interview was created successfully — don't block on email failure.
+        // The user can always resend from the interview detail page.
+      }
+    }
 
     await refreshNuxtData('interviews')
     emit('scheduled')
@@ -535,6 +549,18 @@ async function handleSubmit() {
                 {{ isSubmitting ? 'Scheduling…' : 'Schedule Interview' }}
               </button>
             </div>
+
+            <!-- Send invitation checkbox -->
+            <label class="flex items-center gap-2 mt-3 cursor-pointer group">
+              <input
+                v-model="sendInvitationAfter"
+                type="checkbox"
+                class="size-4 rounded border-surface-300 dark:border-surface-600 text-brand-600 focus:ring-brand-500/30 cursor-pointer"
+              />
+              <span class="text-xs text-surface-500 dark:text-surface-400 group-hover:text-surface-700 dark:group-hover:text-surface-300 transition-colors">
+                Send invitation email to candidate after scheduling
+              </span>
+            </label>
           </div>
         </div>
       </Transition>

@@ -40,6 +40,7 @@ export default defineEventHandler(async (event) => {
         location: interview.location,
         notes: interview.notes,
         interviewers: interview.interviewers,
+        invitationSentAt: interview.invitationSentAt,
         createdAt: interview.createdAt,
         updatedAt: interview.updatedAt,
         applicationId: interview.applicationId,

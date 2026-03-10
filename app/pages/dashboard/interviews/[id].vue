@@ -3,7 +3,7 @@ import {
   ArrowLeft, Calendar, Clock, Video, Phone, Building2, Code2,
   FileText, UsersRound, CheckCircle2, XCircle, AlertTriangle,
   UserRound, Briefcase, Pencil, MapPin, Users, MessageSquare,
-  Save, X,
+  Save, X, Mail, Send, CheckCheck,
 } from 'lucide-vue-next'
 
 definePageMeta({
@@ -15,7 +15,7 @@ const route = useRoute()
 const interviewId = route.params.id as string
 const { handlePreviewReadOnlyError } = usePreviewReadOnly()
 
-const { interview, status: fetchStatus, error, updateInterview, deleteInterview } = useInterview(interviewId)
+const { interview, status: fetchStatus, error, updateInterview, deleteInterview, refresh } = useInterview(interviewId)
 
 useSeoMeta({
   title: computed(() =>
@@ -269,6 +269,14 @@ async function handleDelete() {
     isDeleting.value = false
   }
 }
+
+// ─── Email invitation ────────────────────────────────────────────
+const showEmailModal = ref(false)
+
+async function handleInvitationSent() {
+  showEmailModal.value = false
+  await refresh()
+}
 </script>
 
 <template>
@@ -343,6 +351,14 @@ async function handleDelete() {
             <Pencil class="size-4" />
           </button>
         </div>
+        <!-- Invitation status -->
+        <div
+          v-if="interview.invitationSentAt"
+          class="mt-3 flex items-center gap-1.5 text-xs text-success-600 dark:text-success-400"
+        >
+          <CheckCheck class="size-3.5" />
+          Invitation sent {{ formatDate(interview.invitationSentAt) }}
+        </div>
       </div>
 
       <!-- Quick actions -->
@@ -372,6 +388,14 @@ async function handleDelete() {
           >
             <Calendar class="mr-1.5 size-3.5" />
             Reschedule
+          </button>
+          <button
+            v-if="interview.status === 'scheduled'"
+            class="inline-flex cursor-pointer items-center rounded-full border border-success-200 dark:border-success-800 bg-success-50 dark:bg-success-950/30 px-3.5 py-1.5 text-sm font-medium text-success-700 dark:text-success-300 hover:bg-success-100 dark:hover:bg-success-950/50 transition-all duration-150"
+            @click="showEmailModal = true"
+          >
+            <Mail class="mr-1.5 size-3.5" />
+            {{ interview.invitationSentAt ? 'Resend Invitation' : 'Send Invitation' }}
           </button>
         </div>
       </div>
@@ -731,5 +755,13 @@ async function handleDelete() {
         </div>
       </div>
     </Teleport>
+
+    <!-- Email invitation modal -->
+    <InterviewEmailModal
+      v-if="showEmailModal && interview"
+      :interview="interview"
+      @close="showEmailModal = false"
+      @sent="handleInvitationSent"
+    />
   </div>
 </template>

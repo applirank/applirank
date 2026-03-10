@@ -34,6 +34,7 @@ const atsStatements = {
   document: ['create', 'read', 'delete'],
   comment: ['create', 'read', 'update', 'delete'],
   interview: ['create', 'read', 'update', 'delete'],
+  emailTemplate: ['create', 'read', 'update', 'delete'],
   activityLog: ['read'],
 } as const
 
@@ -60,6 +61,7 @@ export const owner = ac.newRole({
   document: ['create', 'read', 'delete'],
   comment: ['create', 'read', 'update', 'delete'],
   interview: ['create', 'read', 'update', 'delete'],
+  emailTemplate: ['create', 'read', 'update', 'delete'],
   activityLog: ['read'],
 })
 
@@ -71,6 +73,7 @@ export const admin = ac.newRole({
   document: ['create', 'read', 'delete'],
   comment: ['create', 'read', 'update', 'delete'],
   interview: ['create', 'read', 'update', 'delete'],
+  emailTemplate: ['create', 'read', 'update', 'delete'],
   activityLog: ['read'],
 })
 
@@ -82,5 +85,6 @@ export const member = ac.newRole({
   document: ['create', 'read'],
   comment: ['create', 'read', 'delete'],
   interview: ['create', 'read', 'update'],
+  emailTemplate: ['create', 'read', 'update'],
   activityLog: ['read'],
 })

@@ -244,6 +244,7 @@ export const interview = pgTable('interview', {
   notes: text('notes'),
   interviewers: jsonb('interviewers').$type<string[]>(),
   createdById: text('created_by_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  invitationSentAt: timestamp('invitation_sent_at'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 }, (t) => ([
@@ -252,6 +253,29 @@ export const interview = pgTable('interview', {
   index('interview_scheduled_at_idx').on(t.scheduledAt),
   index('interview_status_idx').on(t.status),
   index('interview_created_by_id_idx').on(t.createdById),
+]))
+
+// ─────────────────────────────────────────────
+// Email Templates
+// ─────────────────────────────────────────────
+
+/**
+ * Reusable email templates for interview invitations.
+ * Each org can create custom templates or use the system defaults.
+ * Template body supports placeholder variables like {{candidateName}}, {{jobTitle}}, etc.
+ */
+export const emailTemplate = pgTable('email_template', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organizationId: text('organization_id').notNull().references(() => organization.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  subject: text('subject').notNull(),
+  body: text('body').notNull(),
+  createdById: text('created_by_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (t) => ([
+  index('email_template_organization_id_idx').on(t.organizationId),
+  index('email_template_created_by_id_idx').on(t.createdById),
 ]))
 
 export const commentTargetEnum = pgEnum('comment_target', ['candidate', 'application', 'job'])
@@ -369,4 +393,9 @@ export const interviewRelations = relations(interview, ({ one }) => ({
   organization: one(organization, { fields: [interview.organizationId], references: [organization.id] }),
   application: one(application, { fields: [interview.applicationId], references: [application.id] }),
   createdBy: one(user, { fields: [interview.createdById], references: [user.id] }),
+}))
+
+export const emailTemplateRelations = relations(emailTemplate, ({ one }) => ({
+  organization: one(organization, { fields: [emailTemplate.organizationId], references: [organization.id] }),
+  createdBy: one(user, { fields: [emailTemplate.createdById], references: [user.id] }),
 }))

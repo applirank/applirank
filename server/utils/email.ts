@@ -182,3 +182,140 @@ function escapeHtml(str: string): string {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;')
 }
+
+// ─────────────────────────────────────────────
+// Interview invitation emails
+// ─────────────────────────────────────────────
+
+export interface InterviewEmailData {
+  candidateName: string
+  candidateFirstName: string
+  candidateLastName: string
+  candidateEmail: string
+  jobTitle: string
+  interviewTitle: string
+  interviewDate: string
+  interviewTime: string
+  interviewDuration: number
+  interviewType: string
+  interviewLocation: string | null
+  interviewers: string[] | null
+  organizationName: string
+}
+
+/**
+ * Replace {{variable}} placeholders in a template string with actual values.
+ * Only replaces known variables to prevent injection of unexpected content.
+ */
+export function renderTemplate(template: string, data: InterviewEmailData): string {
+  const variables: Record<string, string> = {
+    candidateName: data.candidateName,
+    candidateFirstName: data.candidateFirstName,
+    candidateLastName: data.candidateLastName,
+    candidateEmail: data.candidateEmail,
+    jobTitle: data.jobTitle,
+    interviewTitle: data.interviewTitle,
+    interviewDate: data.interviewDate,
+    interviewTime: data.interviewTime,
+    interviewDuration: String(data.interviewDuration),
+    interviewType: data.interviewType,
+    interviewLocation: data.interviewLocation ?? 'To be confirmed',
+    interviewers: data.interviewers?.join(', ') ?? 'To be confirmed',
+    organizationName: data.organizationName,
+  }
+
+  return template.replace(/\{\{(\w+)\}\}/g, (match, key: string) => {
+    return key in variables ? variables[key]! : match
+  })
+}
+
+/**
+ * Send an interview invitation email to a candidate via Resend.
+ * Falls back to console.info when RESEND_API_KEY is not set.
+ */
+export async function sendInterviewInvitationEmail(params: {
+  subject: string
+  body: string
+  data: InterviewEmailData
+}): Promise<void> {
+  const renderedSubject = renderTemplate(params.subject, params.data)
+  const renderedBody = renderTemplate(params.body, params.data)
+
+  const resend = getResendClient()
+
+  if (!resend) {
+    console.info(
+      `[Reqcore] Interview invitation email → ${params.data.candidateEmail} | ` +
+      `Subject: ${renderedSubject} | ` +
+      `Interview: ${params.data.interviewTitle} | ` +
+      `Date: ${params.data.interviewDate} at ${params.data.interviewTime}`,
+    )
+    return
+  }
+
+  const fromEmail = env.RESEND_FROM_EMAIL
+
+  const { error } = await resend.emails.send({
+    from: fromEmail,
+    to: [params.data.candidateEmail],
+    subject: renderedSubject,
+    html: buildInterviewInvitationHtml(renderedSubject, renderedBody, params.data),
+    text: renderedBody,
+    tags: [
+      { name: 'category', value: 'interview-invitation' },
+      { name: 'interview', value: params.data.interviewTitle.slice(0, 256).replace(/[^a-zA-Z0-9_-]/g, '_') },
+    ],
+  })
+
+  if (error) {
+    console.error('[Reqcore] Failed to send interview invitation email via Resend:', error)
+    throw new Error(`Failed to send interview invitation email: ${error.message}`)
+  }
+
+  console.info(`[Reqcore] Interview invitation email sent to ${params.data.candidateEmail} via Resend`)
+}
+
+function buildInterviewInvitationHtml(subject: string, bodyText: string, data: InterviewEmailData): string {
+  const bodyHtml = escapeHtml(bodyText).replace(/\n/g, '<br />')
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${escapeHtml(subject)}</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f5;padding:40px 20px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background-color:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e4e4e7;">
+          <!-- Header -->
+          <tr>
+            <td style="padding:32px 32px 24px;text-align:center;border-bottom:1px solid #f4f4f5;">
+              <h1 style="margin:0;font-size:20px;font-weight:600;color:#09090b;">${escapeHtml(data.organizationName)}</h1>
+            </td>
+          </tr>
+          <!-- Body -->
+          <tr>
+            <td style="padding:32px;">
+              <div style="font-size:14px;line-height:1.7;color:#3f3f46;">
+                ${bodyHtml}
+              </div>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="padding:16px 32px;text-align:center;border-top:1px solid #f4f4f5;background-color:#fafafa;">
+              <p style="margin:0;font-size:12px;color:#a1a1aa;">
+                Sent by ${escapeHtml(data.organizationName)} via Reqcore
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
+}

@@ -10,6 +10,7 @@ export interface Interview {
   location: string | null
   notes: string | null
   interviewers: string[] | null
+  invitationSentAt: string | null
   applicationId: string
   candidateFirstName: string
   candidateLastName: string
