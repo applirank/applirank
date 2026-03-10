@@ -32,8 +32,17 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: 'Interview not found' })
   }
 
-  if (interviewRecord.status === 'cancelled') {
-    throw createError({ statusCode: 400, statusMessage: 'Cannot send invitation for a cancelled interview' })
+  if (interviewRecord.status !== 'scheduled') {
+    throw createError({ statusCode: 400, statusMessage: `Cannot send invitation for a ${interviewRecord.status} interview` })
+  }
+
+  // Rate-limit: enforce a 2-minute cooldown between invitation sends
+  if (interviewRecord.invitationSentAt) {
+    const cooldownMs = 2 * 60 * 1000
+    const elapsed = Date.now() - new Date(interviewRecord.invitationSentAt).getTime()
+    if (elapsed < cooldownMs) {
+      throw createError({ statusCode: 429, statusMessage: 'Invitation was already sent recently. Please wait before resending.' })
+    }
   }
 
   // Fetch application → candidate + job data

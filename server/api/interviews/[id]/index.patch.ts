@@ -1,6 +1,7 @@
 import { and, eq } from 'drizzle-orm'
 import { interview } from '../../../database/schema'
-import { interviewIdParamSchema, updateInterviewSchema, INTERVIEW_STATUS_TRANSITIONS } from '../../../utils/schemas/interview'
+import { interviewIdParamSchema, updateInterviewSchema } from '../../../utils/schemas/interview'
+import { INTERVIEW_STATUS_TRANSITIONS } from '~~/shared/status-transitions'
 
 export default defineEventHandler(async (event) => {
   const session = await requirePermission(event, { interview: ['update'] })

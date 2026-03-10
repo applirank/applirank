@@ -1,6 +1,4 @@
 import { z } from 'zod'
-import { INTERVIEW_STATUS_TRANSITIONS } from '~~/shared/status-transitions'
-
 // ─────────────────────────────────────────────
 // Interview validation schemas — shared across API routes
 // ─────────────────────────────────────────────
@@ -33,7 +31,10 @@ export const updateInterviewSchema = z.object({
   location: z.string().max(500).nullish(),
   notes: z.string().max(5000).nullish(),
   interviewers: z.array(z.string().max(200)).max(20).nullish(),
-})
+}).refine(
+  data => !data.scheduledAt || new Date(data.scheduledAt) > new Date(),
+  { message: 'Scheduled date must be in the future', path: ['scheduledAt'] },
+)
 
 /** Schema for interview list query params */
 export const interviewQuerySchema = z.object({
@@ -51,5 +52,4 @@ export const interviewIdParamSchema = z.object({
   id: z.string().min(1),
 })
 
-/** Re-export for consumers that already import from this module */
-export { INTERVIEW_STATUS_TRANSITIONS } from '~~/shared/status-transitions'
+
