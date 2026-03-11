@@ -3,6 +3,7 @@ import {
   X, Calendar, Clock, MapPin, Users, Video, Phone,
   Building2, Code2, FileText, UsersRound, ChevronLeft, ChevronRight,
   Plus, AlertCircle, Mail, ChevronDown, RefreshCw, Globe,
+  Send, UserPlus, Bell, Pencil,
 } from 'lucide-vue-next'
 import { SYSTEM_TEMPLATES } from '~/utils/system-templates'
 
@@ -39,7 +40,19 @@ const form = reactive({
 const errors = ref<Record<string, string>>({})
 const isSubmitting = ref(false)
 const isMoving = ref(false)
-const sendInvitationAfter = ref(false)
+
+// ─── Notification method ──────────────────────────────────────────
+const notifyViaEmail = ref(false)
+const notifyViaCalendar = ref(false)
+
+// ─── Google Calendar event customization ──────────────────────────
+const calendarCustomization = reactive({
+  eventTitle: '',
+  eventDescription: '',
+  addCandidateAttendee: true,
+  sendNotifications: true,
+  showCustomize: false,
+})
 
 // ─── Email templates ──────────────────────────────────────────────
 const { templates: customTemplates } = useEmailTemplates()
@@ -66,10 +79,15 @@ function toDateString(d: Date): string {
 
 onMounted(() => {
   form.title = `Interview — ${props.candidateName}`
+  calendarCustomization.eventTitle = `Interview — ${props.candidateName}`
   // Default date to tomorrow
   const tomorrow = new Date()
   tomorrow.setDate(tomorrow.getDate() + 1)
   form.date = toDateString(tomorrow)
+  // Auto-enable Google Calendar if connected
+  if (calendarConnected.value) {
+    notifyViaCalendar.value = true
+  }
 })
 
 // ─── Interview type config ────────────────────────────────────────
@@ -281,11 +299,19 @@ async function handleSubmit() {
         notes: form.notes.trim() || undefined,
         interviewers: filteredInterviewers.length > 0 ? filteredInterviewers : undefined,
         timezone: form.timezone,
+        // Calendar sync preferences
+        calendarSync: notifyViaCalendar.value,
+        ...(notifyViaCalendar.value && {
+          calendarEventTitle: calendarCustomization.eventTitle.trim() || undefined,
+          calendarEventDescription: calendarCustomization.eventDescription.trim() || undefined,
+          calendarAddCandidateAttendee: calendarCustomization.addCandidateAttendee,
+          calendarSendUpdates: calendarCustomization.sendNotifications,
+        }),
       },
     })
 
-    // Optionally send invitation email immediately
-    if (sendInvitationAfter.value && created?.id) {
+    // Optionally send invitation email
+    if (notifyViaEmail.value && created?.id) {
       try {
         await $fetch(`/api/interviews/${created.id}/send-invitation`, {
           method: 'POST',
@@ -293,7 +319,6 @@ async function handleSubmit() {
         })
       } catch {
         // Interview was created successfully — don't block on email failure.
-        // The user can always resend from the interview detail page.
       }
     }
 
@@ -365,16 +390,6 @@ async function handleMoveToInterview() {
                 <p class="text-[13px] text-surface-500 dark:text-surface-400 truncate pl-[42px]">
                   {{ candidateName }} · {{ jobTitle }}
                 </p>
-                <!-- Calendar sync badge -->
-                <div
-                  v-if="calendarConnected"
-                  class="flex items-center gap-1.5 pl-[42px] mt-1.5"
-                >
-                  <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-950/30 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
-                    <RefreshCw class="size-3" />
-                    Google Calendar sync
-                  </span>
-                </div>
               </div>
               <button
                 class="flex items-center justify-center rounded-lg p-2 -mr-1.5 -mt-0.5 text-surface-400 hover:text-surface-600 hover:bg-surface-100 dark:text-surface-500 dark:hover:text-surface-300 dark:hover:bg-surface-800 transition-colors cursor-pointer"
@@ -393,6 +408,202 @@ async function handleMoveToInterview() {
             <div v-if="errors.submit" class="flex items-start gap-2.5 rounded-xl border border-danger-200/60 bg-danger-50/80 p-3.5 text-sm text-danger-700 dark:border-danger-800/40 dark:bg-danger-950/30 dark:text-danger-300">
               <AlertCircle class="size-4 shrink-0 mt-0.5" />
               {{ errors.submit }}
+            </div>
+
+            <!-- Candidate notification -->
+            <div>
+              <label class="block text-[13px] font-medium text-surface-700 dark:text-surface-300 mb-2.5">
+                <Send class="inline size-3.5 mr-1.5 -mt-0.5 text-surface-400" />
+                Notify candidate
+              </label>
+
+              <div class="space-y-2">
+                <!-- Option: Standard email -->
+                <div class="rounded-xl border transition-all" :class="notifyViaEmail ? 'border-brand-300 dark:border-brand-700 bg-brand-50/30 dark:bg-brand-950/10' : 'border-surface-200 dark:border-surface-700/80'">
+                  <label class="flex items-center gap-3 cursor-pointer px-3.5 py-3 group">
+                    <input
+                      v-model="notifyViaEmail"
+                      type="checkbox"
+                      class="size-4 rounded border-surface-300 dark:border-surface-600 text-brand-600 focus:ring-brand-500/20 focus:ring-offset-0 cursor-pointer"
+                    />
+                    <Mail class="size-4 shrink-0 transition-colors" :class="notifyViaEmail ? 'text-brand-600 dark:text-brand-400' : 'text-surface-400 dark:text-surface-500'" />
+                    <div class="min-w-0 flex-1">
+                      <p class="text-[13px] font-medium transition-colors" :class="notifyViaEmail ? 'text-surface-900 dark:text-surface-100' : 'text-surface-600 dark:text-surface-400'">
+                        Standard email
+                      </p>
+                      <p class="text-[11px] text-surface-400 dark:text-surface-500">
+                        Send interview invitation via email (noreply)
+                      </p>
+                    </div>
+                  </label>
+
+                  <!-- Email template picker (expanded when checked) -->
+                  <div v-if="notifyViaEmail" class="px-3.5 pb-3.5 pt-0">
+                    <div class="relative">
+                      <label class="block text-[12px] font-medium text-surface-500 dark:text-surface-400 mb-1.5">
+                        Email template
+                      </label>
+                      <button
+                        type="button"
+                        class="w-full flex items-center justify-between rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 px-3 py-2 text-sm text-left transition-all hover:border-surface-300 dark:hover:border-surface-600 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 cursor-pointer"
+                        @click="showTemplateDropdown = !showTemplateDropdown"
+                      >
+                        <span class="truncate text-surface-800 dark:text-surface-200">{{ selectedTemplateName }}</span>
+                        <ChevronDown class="size-4 shrink-0 text-surface-400 transition-transform" :class="showTemplateDropdown ? 'rotate-180' : ''" />
+                      </button>
+
+                      <!-- Template dropdown -->
+                      <Transition
+                        enter-active-class="transition duration-150 ease-out"
+                        enter-from-class="opacity-0 -translate-y-1"
+                        enter-to-class="opacity-100 translate-y-0"
+                        leave-active-class="transition duration-100 ease-in"
+                        leave-from-class="opacity-100 translate-y-0"
+                        leave-to-class="opacity-0 -translate-y-1"
+                      >
+                        <div v-if="showTemplateDropdown" class="absolute z-10 mt-1 w-full rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 shadow-lg shadow-surface-900/10 dark:shadow-black/20 overflow-hidden">
+                          <!-- System templates -->
+                          <div class="px-2.5 pt-2 pb-1">
+                            <span class="text-[10px] font-semibold uppercase tracking-wider text-surface-400 dark:text-surface-500">Built-in</span>
+                          </div>
+                          <button
+                            v-for="t in allTemplates.filter(t => t.isSystem)"
+                            :key="t.id"
+                            type="button"
+                            class="w-full flex items-start gap-2.5 px-3 py-2 text-left text-sm hover:bg-surface-50 dark:hover:bg-surface-700/50 transition-colors cursor-pointer"
+                            :class="selectedTemplateId === t.id ? 'bg-brand-50/60 dark:bg-brand-950/20' : ''"
+                            @click="selectedTemplateId = t.id; showTemplateDropdown = false"
+                          >
+                            <div class="min-w-0 flex-1">
+                              <p class="font-medium text-surface-800 dark:text-surface-200 truncate">{{ t.name }}</p>
+                              <p v-if="t.description" class="text-xs text-surface-500 dark:text-surface-400 truncate">{{ t.description }}</p>
+                            </div>
+                            <div v-if="selectedTemplateId === t.id" class="shrink-0 mt-0.5 text-brand-600 dark:text-brand-400">
+                              <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                            </div>
+                          </button>
+
+                          <!-- Custom templates -->
+                          <template v-if="allTemplates.some(t => !t.isSystem)">
+                            <div class="border-t border-surface-100 dark:border-surface-700/60 mx-2.5" />
+                            <div class="px-2.5 pt-2 pb-1">
+                              <span class="text-[10px] font-semibold uppercase tracking-wider text-surface-400 dark:text-surface-500">Custom</span>
+                            </div>
+                            <button
+                              v-for="t in allTemplates.filter(t => !t.isSystem)"
+                              :key="t.id"
+                              type="button"
+                              class="w-full flex items-center gap-2.5 px-3 py-2 text-left text-sm hover:bg-surface-50 dark:hover:bg-surface-700/50 transition-colors cursor-pointer"
+                              :class="selectedTemplateId === t.id ? 'bg-brand-50/60 dark:bg-brand-950/20' : ''"
+                              @click="selectedTemplateId = t.id; showTemplateDropdown = false"
+                            >
+                              <p class="font-medium text-surface-800 dark:text-surface-200 truncate flex-1">{{ t.name }}</p>
+                              <div v-if="selectedTemplateId === t.id" class="shrink-0 text-brand-600 dark:text-brand-400">
+                                <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                              </div>
+                            </button>
+                          </template>
+
+                          <div class="h-1" />
+                        </div>
+                      </Transition>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Option: Google Calendar -->
+                <div class="rounded-xl border transition-all" :class="notifyViaCalendar ? 'border-emerald-300 dark:border-emerald-700 bg-emerald-50/30 dark:bg-emerald-950/10' : 'border-surface-200 dark:border-surface-700/80'">
+                  <label class="flex items-center gap-3 px-3.5 py-3 group" :class="calendarConnected ? 'cursor-pointer' : 'cursor-default'">
+                    <input
+                      v-model="notifyViaCalendar"
+                      type="checkbox"
+                      :disabled="!calendarConnected"
+                      class="size-4 rounded border-surface-300 dark:border-surface-600 text-emerald-600 focus:ring-emerald-500/20 focus:ring-offset-0 cursor-pointer disabled:cursor-not-allowed"
+                    />
+                    <Calendar class="size-4 shrink-0 transition-colors" :class="notifyViaCalendar ? 'text-emerald-600 dark:text-emerald-400' : 'text-surface-400 dark:text-surface-500'" />
+                    <div class="min-w-0 flex-1">
+                      <p class="text-[13px] font-medium transition-colors" :class="notifyViaCalendar ? 'text-surface-900 dark:text-surface-100' : 'text-surface-600 dark:text-surface-400'">
+                        Google Calendar
+                      </p>
+                      <p class="text-[11px] text-surface-400 dark:text-surface-500">
+                        <template v-if="calendarConnected">Create calendar event with invite</template>
+                        <template v-else>
+                          <NuxtLink to="/dashboard/settings/integrations" class="underline underline-offset-2 hover:text-surface-600 dark:hover:text-surface-400 transition-colors" @click.stop>Connect in Settings</NuxtLink>
+                          to enable
+                        </template>
+                      </p>
+                    </div>
+                    <!-- Customize toggle -->
+                    <button
+                      v-if="notifyViaCalendar && calendarConnected"
+                      type="button"
+                      class="shrink-0 rounded-lg p-1.5 text-surface-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:text-emerald-400 dark:hover:bg-emerald-950/30 transition-colors cursor-pointer"
+                      title="Customize event"
+                      @click.prevent="calendarCustomization.showCustomize = !calendarCustomization.showCustomize"
+                    >
+                      <Pencil class="size-3.5" />
+                    </button>
+                  </label>
+
+                  <!-- Google Calendar event customization (expanded) -->
+                  <div v-if="notifyViaCalendar && calendarCustomization.showCustomize" class="px-3.5 pb-3.5 pt-0 space-y-3 border-t border-emerald-200/60 dark:border-emerald-800/30 mt-0">
+                    <!-- Event title -->
+                    <div>
+                      <label for="cal-event-title" class="block text-[12px] font-medium text-surface-500 dark:text-surface-400 mb-1.5">
+                        Event title
+                      </label>
+                      <input
+                        id="cal-event-title"
+                        v-model="calendarCustomization.eventTitle"
+                        type="text"
+                        placeholder="Defaults to interview title"
+                        class="w-full rounded-lg border border-surface-200 dark:border-surface-700/80 bg-white dark:bg-surface-800 px-3 py-1.5 text-[13px] text-surface-900 dark:text-surface-100 placeholder:text-surface-400 dark:placeholder:text-surface-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all"
+                      />
+                    </div>
+
+                    <!-- Event description -->
+                    <div>
+                      <label for="cal-event-desc" class="block text-[12px] font-medium text-surface-500 dark:text-surface-400 mb-1.5">
+                        Event description
+                      </label>
+                      <textarea
+                        id="cal-event-desc"
+                        v-model="calendarCustomization.eventDescription"
+                        rows="3"
+                        placeholder="Leave empty to auto-generate from interview details"
+                        class="w-full rounded-lg border border-surface-200 dark:border-surface-700/80 bg-white dark:bg-surface-800 px-3 py-1.5 text-[13px] text-surface-900 dark:text-surface-100 placeholder:text-surface-400 dark:placeholder:text-surface-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all resize-none"
+                      />
+                    </div>
+
+                    <!-- Toggles row -->
+                    <div class="flex flex-col gap-2">
+                      <label class="flex items-center gap-2 cursor-pointer">
+                        <input
+                          v-model="calendarCustomization.addCandidateAttendee"
+                          type="checkbox"
+                          class="size-3.5 rounded border-surface-300 dark:border-surface-600 text-emerald-600 focus:ring-emerald-500/20 focus:ring-offset-0 cursor-pointer"
+                        />
+                        <UserPlus class="size-3.5 text-surface-400" />
+                        <span class="text-[12px] text-surface-600 dark:text-surface-400">Add candidate as attendee</span>
+                      </label>
+                      <label class="flex items-center gap-2 cursor-pointer">
+                        <input
+                          v-model="calendarCustomization.sendNotifications"
+                          type="checkbox"
+                          class="size-3.5 rounded border-surface-300 dark:border-surface-600 text-emerald-600 focus:ring-emerald-500/20 focus:ring-offset-0 cursor-pointer"
+                        />
+                        <Bell class="size-3.5 text-surface-400" />
+                        <span class="text-[12px] text-surface-600 dark:text-surface-400">Send Google Calendar notifications</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Hint if neither selected -->
+              <p v-if="!notifyViaEmail && !notifyViaCalendar" class="mt-2 text-[11px] text-surface-400 dark:text-surface-500 italic">
+                No notification will be sent — the interview will only be recorded internally.
+              </p>
             </div>
 
             <!-- Interview Type -->
@@ -578,92 +789,6 @@ async function handleMoveToInterview() {
               />
             </div>
 
-            <!-- Email invitation -->
-            <div class="space-y-3">
-              <label class="flex items-center gap-2.5 cursor-pointer group -mx-2 px-2 py-2 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-800/40 transition-colors">
-                <input
-                  v-model="sendInvitationAfter"
-                  type="checkbox"
-                  class="size-4 rounded border-surface-300 dark:border-surface-600 text-brand-600 focus:ring-brand-500/20 focus:ring-offset-0 cursor-pointer"
-                />
-                <Mail class="size-3.5 text-surface-400 dark:text-surface-500 group-hover:text-brand-500 transition-colors" />
-                <span class="text-[13px] font-medium text-surface-600 dark:text-surface-400 group-hover:text-surface-900 dark:group-hover:text-surface-100 transition-colors">
-                  Send invitation email after scheduling
-                </span>
-              </label>
-
-              <!-- Template picker (shown when checkbox is on) -->
-              <div v-if="sendInvitationAfter" class="relative">
-                <label class="block text-[12px] font-medium text-surface-500 dark:text-surface-400 mb-1.5">
-                  Email template
-                </label>
-                <button
-                  type="button"
-                  class="w-full flex items-center justify-between rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 px-3 py-2 text-sm text-left transition-all hover:border-surface-300 dark:hover:border-surface-600 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 cursor-pointer"
-                  @click="showTemplateDropdown = !showTemplateDropdown"
-                >
-                  <span class="truncate text-surface-800 dark:text-surface-200">{{ selectedTemplateName }}</span>
-                  <ChevronDown class="size-4 shrink-0 text-surface-400 transition-transform" :class="showTemplateDropdown ? 'rotate-180' : ''" />
-                </button>
-
-                <!-- Dropdown -->
-                <Transition
-                  enter-active-class="transition duration-150 ease-out"
-                  enter-from-class="opacity-0 -translate-y-1"
-                  enter-to-class="opacity-100 translate-y-0"
-                  leave-active-class="transition duration-100 ease-in"
-                  leave-from-class="opacity-100 translate-y-0"
-                  leave-to-class="opacity-0 -translate-y-1"
-                >
-                  <div v-if="showTemplateDropdown" class="absolute z-10 mt-1 w-full rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 shadow-lg shadow-surface-900/10 dark:shadow-black/20 overflow-hidden">
-                    <!-- System templates -->
-                    <div class="px-2.5 pt-2 pb-1">
-                      <span class="text-[10px] font-semibold uppercase tracking-wider text-surface-400 dark:text-surface-500">Built-in</span>
-                    </div>
-                    <button
-                      v-for="t in allTemplates.filter(t => t.isSystem)"
-                      :key="t.id"
-                      type="button"
-                      class="w-full flex items-start gap-2.5 px-3 py-2 text-left text-sm hover:bg-surface-50 dark:hover:bg-surface-700/50 transition-colors cursor-pointer"
-                      :class="selectedTemplateId === t.id ? 'bg-brand-50/60 dark:bg-brand-950/20' : ''"
-                      @click="selectedTemplateId = t.id; showTemplateDropdown = false"
-                    >
-                      <div class="min-w-0 flex-1">
-                        <p class="font-medium text-surface-800 dark:text-surface-200 truncate">{{ t.name }}</p>
-                        <p v-if="t.description" class="text-xs text-surface-500 dark:text-surface-400 truncate">{{ t.description }}</p>
-                      </div>
-                      <div v-if="selectedTemplateId === t.id" class="shrink-0 mt-0.5 text-brand-600 dark:text-brand-400">
-                        <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
-                      </div>
-                    </button>
-
-                    <!-- Custom templates -->
-                    <template v-if="allTemplates.some(t => !t.isSystem)">
-                      <div class="border-t border-surface-100 dark:border-surface-700/60 mx-2.5" />
-                      <div class="px-2.5 pt-2 pb-1">
-                        <span class="text-[10px] font-semibold uppercase tracking-wider text-surface-400 dark:text-surface-500">Custom</span>
-                      </div>
-                      <button
-                        v-for="t in allTemplates.filter(t => !t.isSystem)"
-                        :key="t.id"
-                        type="button"
-                        class="w-full flex items-center gap-2.5 px-3 py-2 text-left text-sm hover:bg-surface-50 dark:hover:bg-surface-700/50 transition-colors cursor-pointer"
-                        :class="selectedTemplateId === t.id ? 'bg-brand-50/60 dark:bg-brand-950/20' : ''"
-                        @click="selectedTemplateId = t.id; showTemplateDropdown = false"
-                      >
-                        <p class="font-medium text-surface-800 dark:text-surface-200 truncate flex-1">{{ t.name }}</p>
-                        <div v-if="selectedTemplateId === t.id" class="shrink-0 text-brand-600 dark:text-brand-400">
-                          <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
-                        </div>
-                      </button>
-                    </template>
-
-                    <div class="h-1" />
-                  </div>
-                </Transition>
-              </div>
-            </div>
-
             <!-- Interviewers -->
             <div>
               <label class="block text-[13px] font-medium text-surface-700 dark:text-surface-300 mb-2">
@@ -726,10 +851,16 @@ async function handleMoveToInterview() {
               <span class="text-[11px] text-surface-400 dark:text-surface-500 shrink-0">· {{ form.timezone.split('/').pop()?.replace(/_/g, ' ') }}</span>
             </div>
 
-            <!-- Google Calendar sync notice -->
-            <div v-if="calendarConnected" class="mb-3 flex items-center gap-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/20 px-3 py-2 border border-emerald-200/60 dark:border-emerald-800/40">
-              <Calendar class="size-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
-              <span class="text-[12px] text-emerald-700 dark:text-emerald-400 font-medium">This interview will be synced to Google Calendar</span>
+            <!-- Notification summary -->
+            <div v-if="notifyViaEmail || notifyViaCalendar" class="mb-3 flex flex-wrap items-center gap-1.5">
+              <span v-if="notifyViaEmail" class="inline-flex items-center gap-1 rounded-full bg-brand-50 dark:bg-brand-950/30 px-2 py-0.5 text-[11px] font-medium text-brand-700 dark:text-brand-400">
+                <Mail class="size-3" />
+                Email
+              </span>
+              <span v-if="notifyViaCalendar" class="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-950/30 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
+                <Calendar class="size-3" />
+                Google Calendar
+              </span>
             </div>
 
             <div class="flex items-center gap-3">

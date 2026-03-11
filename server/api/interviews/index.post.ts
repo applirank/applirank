@@ -44,33 +44,39 @@ export default defineEventHandler(async (event) => {
 
   if (!created) throw createError({ statusCode: 500, statusMessage: 'Failed to create interview' })
 
-  // Sync to Google Calendar (non-blocking)
-  if (app.candidate && app.job) {
+  // Sync to Google Calendar only when explicitly requested
+  if (body.calendarSync !== false && app.candidate && app.job) {
     const org = await db.query.organization.findFirst({
       where: eq(organization.id, orgId),
       columns: { name: true },
     })
 
     const candidateName = `${app.candidate.firstName} ${app.candidate.lastName}`
+    const calendarTitle = body.calendarEventTitle?.trim() || body.title
+    const calendarDescription = body.calendarEventDescription?.trim() || [
+      `Interview: ${body.title}`,
+      `Position: ${app.job.title}`,
+      `Candidate: ${candidateName}`,
+      `Duration: ${body.duration} minutes`,
+      ...(body.location ? [`Location: ${body.location}`] : []),
+      ...(body.notes ? [`\nNotes: ${body.notes}`] : []),
+      '',
+      `Scheduled via ${org?.name || 'Reqcore'}`,
+    ].join('\n')
+    const addCandidate = body.calendarAddCandidateAttendee !== false
+    const sendUpdates = body.calendarSendUpdates !== false
+
     createCalendarEvent(session.user.id, {
-      title: body.title,
-      description: [
-        `Interview: ${body.title}`,
-        `Position: ${app.job.title}`,
-        `Candidate: ${candidateName}`,
-        `Duration: ${body.duration} minutes`,
-        ...(body.location ? [`Location: ${body.location}`] : []),
-        ...(body.notes ? [`\nNotes: ${body.notes}`] : []),
-        '',
-        `Scheduled via ${org?.name || 'Reqcore'}`,
-      ].join('\n'),
+      title: calendarTitle,
+      description: calendarDescription,
       startTime: new Date(body.scheduledAt),
       durationMinutes: body.duration,
       timezone: body.timezone ?? 'UTC',
       location: body.location ?? null,
-      candidateEmail: app.candidate.email,
+      candidateEmail: addCandidate ? app.candidate.email : null,
       candidateName,
       interviewerEmails: body.interviewers ?? [],
+      sendUpdates,
     }).then(async (result) => {
       if (result) {
         await db.update(interview)

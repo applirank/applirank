@@ -229,9 +229,10 @@ interface InterviewEventData {
   durationMinutes: number
   timezone: string
   location: string | null
-  candidateEmail: string
+  candidateEmail: string | null
   candidateName: string
   interviewerEmails: string[]
+  sendUpdates?: boolean
 }
 
 /**
@@ -256,11 +257,13 @@ export async function createCalendarEvent(
   const endTime = new Date(data.startTime.getTime() + data.durationMinutes * 60_000)
 
   const attendees: calendar_v3.Schema$EventAttendee[] = [
-    {
-      email: data.candidateEmail,
-      displayName: data.candidateName,
-      responseStatus: 'needsAction',
-    },
+    ...(data.candidateEmail
+      ? [{
+          email: data.candidateEmail,
+          displayName: data.candidateName,
+          responseStatus: 'needsAction' as const,
+        }]
+      : []),
     ...data.interviewerEmails.map(email => ({
       email,
       responseStatus: 'accepted' as const,
@@ -270,7 +273,7 @@ export async function createCalendarEvent(
   try {
     const response = await calendar.events.insert({
       calendarId,
-      sendUpdates: 'all',
+      sendUpdates: data.sendUpdates !== false ? 'all' : 'none',
       requestBody: {
         summary: data.title,
         description: data.description,
