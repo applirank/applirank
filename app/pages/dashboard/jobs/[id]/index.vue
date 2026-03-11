@@ -5,6 +5,7 @@ import {
   UserPlus, Pencil, Trash2, MoreHorizontal, Globe, ChevronDown, X,
   Video, Building2, Code2, UsersRound, Save, Check, MapPin, Users, Plus,
   CheckCircle2, XCircle, AlertTriangle, ArrowUpDown, ListFilter,
+  Maximize2, Minimize2,
 } from 'lucide-vue-next'
 import { z } from 'zod'
 import { usePreviewReadOnly } from '~/composables/usePreviewReadOnly'
@@ -767,7 +768,21 @@ function goToNextCard() {
   currentIndex.value += 1
 }
 
+// ─────────────────────────────────────────────
+// Fullscreen (focus) mode
+// ─────────────────────────────────────────────
+const isFullscreen = ref(false)
+
+function toggleFullscreen() {
+  isFullscreen.value = !isFullscreen.value
+}
+
 function handleKeyNavigation(event: KeyboardEvent) {
+  if (event.key === 'Escape' && isFullscreen.value) {
+    isFullscreen.value = false
+    return
+  }
+
   if (event.key === 'Escape' && showDocPreview.value) {
     closeDocPreview()
     return
@@ -1015,7 +1030,11 @@ function closeDocPreview() {
 </script>
 
 <template>
-  <div class="-mx-6 -my-8 flex h-screen flex-col overflow-hidden">
+  <div
+    :class="isFullscreen
+      ? 'fixed inset-0 z-[100] flex h-screen flex-col overflow-hidden bg-surface-50 dark:bg-surface-950'
+      : '-mx-6 -my-8 flex h-screen flex-col overflow-hidden'"
+  >
     <!-- Loading -->
     <div v-if="isLoading" class="flex flex-1 flex-col items-center justify-center gap-3">
       <div class="size-8 rounded-full border-2 border-brand-200 border-t-brand-600 dark:border-brand-800 dark:border-t-brand-400 animate-spin" />
@@ -1152,6 +1171,16 @@ function closeDocPreview() {
             >
               {{ statusCounts[status] ?? 0 }}
             </span>
+          </button>
+
+          <!-- Fullscreen toggle -->
+          <button
+            class="ml-auto flex shrink-0 cursor-pointer items-center justify-center rounded-lg p-2 text-surface-400 hover:bg-surface-100 hover:text-surface-600 dark:text-surface-500 dark:hover:bg-surface-800 dark:hover:text-surface-300 transition-all duration-200 focus:outline-none"
+            :title="isFullscreen ? 'Exit focus mode (Esc)' : 'Focus mode'"
+            @click="toggleFullscreen"
+          >
+            <Minimize2 v-if="isFullscreen" class="size-4" />
+            <Maximize2 v-else class="size-4" />
           </button>
         </div>
       </div>
