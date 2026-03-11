@@ -141,6 +141,13 @@
     background-color: var(--color-surface-950);
     color: var(--color-surface-100);
   }
+
+  /* Native checkboxes/radios: use dark rendering in dark mode */
+  .dark input[type="checkbox"],
+  .dark input[type="radio"] {
+    color-scheme: dark;
+    border-color: var(--color-surface-600);
+  }
 }
 
 /* ── Premium fade-in animations (Linear-style) ─────────── */
