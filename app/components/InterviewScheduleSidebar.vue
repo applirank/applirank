@@ -2,7 +2,7 @@
 import {
   X, Calendar, Clock, MapPin, Users, Video, Phone,
   Building2, Code2, FileText, UsersRound, ChevronLeft, ChevronRight,
-  Plus, AlertCircle, Mail, ChevronDown,
+  Plus, AlertCircle, Mail, ChevronDown, RefreshCw, Globe,
 } from 'lucide-vue-next'
 import { SYSTEM_TEMPLATES } from '~/utils/system-templates'
 
@@ -20,6 +20,9 @@ const emit = defineEmits<{
   scheduled: []
 }>()
 
+// ─── Calendar integration status ──────────────────────────────────
+const { isConnected: calendarConnected } = useCalendarIntegration()
+
 // ─── Form state ───────────────────────────────────────────────────
 const form = reactive({
   title: '',
@@ -30,6 +33,7 @@ const form = reactive({
   location: '',
   notes: '',
   interviewers: [] as string[],
+  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
 })
 
 const errors = ref<Record<string, string>>({})
@@ -180,6 +184,49 @@ function removeInterviewer(idx: number) {
   form.interviewers.splice(idx, 1)
 }
 
+// ─── Common Timezones ─────────────────────────────────────────────
+const commonTimezones = [
+  'UTC',
+  'America/New_York',
+  'America/Chicago',
+  'America/Denver',
+  'America/Los_Angeles',
+  'America/Anchorage',
+  'Pacific/Honolulu',
+  'America/Toronto',
+  'America/Vancouver',
+  'America/Sao_Paulo',
+  'America/Buenos_Aires',
+  'America/Mexico_City',
+  'Europe/London',
+  'Europe/Paris',
+  'Europe/Berlin',
+  'Europe/Amsterdam',
+  'Europe/Madrid',
+  'Europe/Rome',
+  'Europe/Stockholm',
+  'Europe/Oslo',
+  'Europe/Helsinki',
+  'Europe/Warsaw',
+  'Europe/Bucharest',
+  'Europe/Istanbul',
+  'Europe/Moscow',
+  'Africa/Cairo',
+  'Africa/Lagos',
+  'Africa/Johannesburg',
+  'Asia/Dubai',
+  'Asia/Kolkata',
+  'Asia/Bangkok',
+  'Asia/Singapore',
+  'Asia/Shanghai',
+  'Asia/Tokyo',
+  'Asia/Seoul',
+  'Asia/Ho_Chi_Minh',
+  'Australia/Sydney',
+  'Australia/Melbourne',
+  'Pacific/Auckland',
+]
+
 // ─── Formatted preview ───────────────────────────────────────────
 const formattedDateTime = computed(() => {
   if (!form.date || !form.time) return ''
@@ -233,6 +280,7 @@ async function handleSubmit() {
         location: form.location.trim() || undefined,
         notes: form.notes.trim() || undefined,
         interviewers: filteredInterviewers.length > 0 ? filteredInterviewers : undefined,
+        timezone: form.timezone,
       },
     })
 
@@ -317,6 +365,16 @@ async function handleMoveToInterview() {
                 <p class="text-[13px] text-surface-500 dark:text-surface-400 truncate pl-[42px]">
                   {{ candidateName }} · {{ jobTitle }}
                 </p>
+                <!-- Calendar sync badge -->
+                <div
+                  v-if="calendarConnected"
+                  class="flex items-center gap-1.5 pl-[42px] mt-1.5"
+                >
+                  <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-950/30 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
+                    <RefreshCw class="size-3" />
+                    Google Calendar sync
+                  </span>
+                </div>
               </div>
               <button
                 class="flex items-center justify-center rounded-lg p-2 -mr-1.5 -mt-0.5 text-surface-400 hover:text-surface-600 hover:bg-surface-100 dark:text-surface-500 dark:hover:text-surface-300 dark:hover:bg-surface-800 transition-colors cursor-pointer"
@@ -488,6 +546,21 @@ async function handleMoveToInterview() {
                   </button>
                 </div>
               </div>
+
+              <!-- Timezone -->
+              <div class="mt-3">
+                <label for="interview-timezone" class="text-[12px] font-medium text-surface-500 dark:text-surface-400 mb-1.5 flex items-center gap-1.5">
+                  <Globe class="size-3 text-surface-400" />
+                  Timezone
+                </label>
+                <select
+                  id="interview-timezone"
+                  v-model="form.timezone"
+                  class="w-full rounded-lg border border-surface-200 dark:border-surface-700/80 bg-surface-50/50 dark:bg-surface-800/50 px-3 py-1.5 text-[13px] text-surface-700 dark:text-surface-300 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all cursor-pointer"
+                >
+                  <option v-for="tz in commonTimezones" :key="tz" :value="tz">{{ tz }}</option>
+                </select>
+              </div>
             </div>
 
             <!-- Location -->
@@ -650,6 +723,7 @@ async function handleMoveToInterview() {
               <Calendar class="size-3.5 shrink-0 text-brand-500 dark:text-brand-400" />
               <span class="text-[12px] font-semibold text-surface-800 dark:text-surface-200 truncate">{{ formattedDateTime }}</span>
               <span class="text-[12px] text-surface-400 dark:text-surface-500 shrink-0">· {{ form.duration }}m</span>
+              <span class="text-[11px] text-surface-400 dark:text-surface-500 shrink-0">· {{ form.timezone.split('/').pop()?.replace(/_/g, ' ') }}</span>
             </div>
 
             <div class="flex items-center gap-3">

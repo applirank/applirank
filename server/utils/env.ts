@@ -73,6 +73,10 @@ const envSchema = z
     RESEND_API_KEY: emptyToUndefined.pipe(z.string().min(1)).optional(),
     /** Sender email address for Resend emails. Must be a verified domain in Resend. Defaults to "Reqcore <noreply@reqcore.com>". */
     RESEND_FROM_EMAIL: emptyToUndefined.pipe(z.string().min(1)).optional().default('Reqcore <noreply@reqcore.com>'),
+    /** Google OAuth2 Client ID for Calendar integration. Obtain from Google Cloud Console. */
+    GOOGLE_CLIENT_ID: emptyToUndefined.pipe(z.string().min(1)).optional(),
+    /** Google OAuth2 Client Secret for Calendar integration. */
+    GOOGLE_CLIENT_SECRET: emptyToUndefined.pipe(z.string().min(1)).optional(),
   })
   .superRefine((data, ctx) => {
     const hasPreviewDomain = data.RAILWAY_PUBLIC_DOMAIN

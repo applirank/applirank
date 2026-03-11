@@ -16,6 +16,7 @@ export const createInterviewSchema = z.object({
   location: z.string().max(500).optional(),
   notes: z.string().max(5000).optional(),
   interviewers: z.array(z.string().max(200)).max(20).optional(),
+  timezone: z.string().max(100).optional(),
 }).refine(
   data => new Date(data.scheduledAt) > new Date(),
   { message: 'Scheduled date must be in the future', path: ['scheduledAt'] },
@@ -31,6 +32,7 @@ export const updateInterviewSchema = z.object({
   location: z.string().max(500).nullish(),
   notes: z.string().max(5000).nullish(),
   interviewers: z.array(z.string().max(200)).max(20).nullish(),
+  timezone: z.string().max(100).optional(),
 }).refine(
   data => !data.scheduledAt || new Date(data.scheduledAt) > new Date(),
   { message: 'Scheduled date must be in the future', path: ['scheduledAt'] },

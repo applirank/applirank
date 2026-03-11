@@ -215,6 +215,45 @@ export const joinRequest = pgTable('join_request', {
 // ─────────────────────────────────────────────
 
 // ─────────────────────────────────────────────
+// Calendar Integrations
+// ─────────────────────────────────────────────
+
+export const calendarProviderEnum = pgEnum('calendar_provider', ['google'])
+
+/**
+ * Per-user calendar integration credentials.
+ * Tokens are encrypted at rest with AES-256-GCM derived from BETTER_AUTH_SECRET.
+ * Each user can connect one calendar provider. The `calendarId` is the target
+ * calendar for interview events (defaults to 'primary').
+ */
+export const calendarIntegration = pgTable('calendar_integration', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  provider: calendarProviderEnum('provider').notNull().default('google'),
+  /** AES-256-GCM encrypted Google OAuth2 access token */
+  accessTokenEncrypted: text('access_token_encrypted').notNull(),
+  /** AES-256-GCM encrypted Google OAuth2 refresh token */
+  refreshTokenEncrypted: text('refresh_token_encrypted').notNull(),
+  /** Google Calendar ID to create events in (defaults to 'primary') */
+  calendarId: text('calendar_id').notNull().default('primary'),
+  /** Email address of the connected Google account */
+  accountEmail: text('account_email'),
+  /** Google push notification channel ID for two-way sync */
+  webhookChannelId: text('webhook_channel_id'),
+  /** Google push notification resource ID (needed for stop) */
+  webhookResourceId: text('webhook_resource_id'),
+  /** When the webhook channel expires (Google max = 7 days) */
+  webhookExpiration: timestamp('webhook_expiration'),
+  /** Incremental sync token from Google Calendar API */
+  syncToken: text('sync_token'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (t) => ([
+  uniqueIndex('calendar_integration_user_provider_idx').on(t.userId, t.provider),
+  index('calendar_integration_webhook_channel_idx').on(t.webhookChannelId),
+]))
+
+// ─────────────────────────────────────────────
 // Interviews
 // ─────────────────────────────────────────────
 
@@ -251,6 +290,10 @@ export const interview = pgTable('interview', {
   invitationSentAt: timestamp('invitation_sent_at'),
   candidateResponse: candidateResponseEnum('candidate_response').notNull().default('pending'),
   candidateRespondedAt: timestamp('candidate_responded_at'),
+  /** Google Calendar event ID for two-way sync (null = not synced) */
+  googleCalendarEventId: text('google_calendar_event_id'),
+  /** IANA timezone for the scheduled time (e.g. 'America/New_York') */
+  timezone: text('timezone').notNull().default('UTC'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 }, (t) => ([
@@ -404,4 +447,8 @@ export const interviewRelations = relations(interview, ({ one }) => ({
 export const emailTemplateRelations = relations(emailTemplate, ({ one }) => ({
   organization: one(organization, { fields: [emailTemplate.organizationId], references: [organization.id] }),
   createdBy: one(user, { fields: [emailTemplate.createdById], references: [user.id] }),
+}))
+
+export const calendarIntegrationRelations = relations(calendarIntegration, ({ one }) => ({
+  user: one(user, { fields: [calendarIntegration.userId], references: [user.id] }),
 }))

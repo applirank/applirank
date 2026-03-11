@@ -13,6 +13,8 @@ export interface Interview {
   invitationSentAt: string | null
   candidateResponse: 'pending' | 'accepted' | 'declined' | 'tentative'
   candidateRespondedAt: string | null
+  googleCalendarEventId: string | null
+  timezone: string
   applicationId: string
   candidateFirstName: string
   candidateLastName: string
@@ -100,6 +102,7 @@ export function useInterviews(options?: {
     location?: string
     notes?: string
     interviewers?: string[]
+    timezone?: string
   }) {
     try {
       const created = await $fetch('/api/interviews', {

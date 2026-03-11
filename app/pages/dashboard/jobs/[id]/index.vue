@@ -1466,12 +1466,7 @@ function closeDocPreview() {
                 <p class="truncate text-sm font-medium text-surface-900 dark:text-surface-100">
                   {{ app.candidateFirstName }} {{ app.candidateLastName }}
                 </p>
-                <a
-                  :href="`mailto:${app.candidateEmail}`"
-                  target="_blank"
-                  class="mt-0.5 block truncate text-xs text-surface-500 dark:text-surface-400 hover:text-brand-600 dark:hover:text-brand-400 hover:underline cursor-pointer transition-colors"
-                  @click.stop
-                >{{ app.candidateEmail }}</a>
+                <p class="mt-0.5 block truncate text-xs text-surface-500 dark:text-surface-400">{{ app.candidateEmail }}</p>
                 <div class="mt-1.5 flex items-center gap-2">
                   <span
                     v-if="app.score != null"
