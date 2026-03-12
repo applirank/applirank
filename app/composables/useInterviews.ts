@@ -186,7 +186,7 @@ export function useInterview(id: MaybeRefOrGetter<string>) {
         body: payload,
       })
       await refresh()
-      await refreshNuxtData(key => typeof key === 'string' && key.startsWith('interviews'))
+      await refreshNuxtData('interviews')
       return updated
     } catch (error) {
       handlePreviewReadOnlyError(error)
@@ -199,7 +199,7 @@ export function useInterview(id: MaybeRefOrGetter<string>) {
       await $fetch(`/api/interviews/${interviewId.value}`, {
         method: 'DELETE',
       })
-      await refreshNuxtData(key => typeof key === 'string' && key.startsWith('interviews'))
+      await refreshNuxtData('interviews')
     } catch (error) {
       handlePreviewReadOnlyError(error)
       throw error
