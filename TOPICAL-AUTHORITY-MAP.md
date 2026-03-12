@@ -2,9 +2,9 @@
 
 > **Status:** Living roadmap — check off articles as they are published.
 >
-> **Goal:** Build definitive topical authority for "open source applicant tracking systems" across 9 tightly-linked content clusters.
+> **Goal:** Build definitive topical authority for "open source applicant tracking systems" across 10 tightly-linked content clusters.
 >
-> **Total articles:** 132 | **Target pace:** ~1 per day | **Timeline:** ~4 months (Phases 1–4) + ongoing refresh
+> **Total articles:** 153 | **Target pace:** ~1 per day | **Timeline:** ~6 months (Phases 1–4) + ongoing refresh
 
 ---
 
@@ -50,11 +50,11 @@ All articles must follow the SEO Skill ([`.agents/skills/seo-skill/SKILL.md`](.a
 
 ---
 
-## Phase 1: Foundation + Money (Weeks 1–4)
+## Phase 1: Foundation + Money (Weeks 1–6)
 
 > Write the money cluster first to capture commercial-intent traffic immediately, then the foundation cluster to give Google base topical context.
 
-### Cluster 2: Choosing & Comparing ATS Solutions (Money Cluster) — 25 articles
+### Cluster 2: Choosing & Comparing ATS Solutions (Money Cluster) — 29 articles
 
 > Highest commercial intent. People searching these are actively evaluating tools. #1 revenue-driving cluster.
 
@@ -82,18 +82,22 @@ All articles must follow the SEO Skill ([`.agents/skills/seo-skill/SKILL.md`](.a
 - [ ] iCIMS vs open source ATS: legacy vs modern 🟢
 - [ ] SmartRecruiters vs open source ATS: enterprise vs DIY 🟢
 - [x] OpenCATS vs Reqcore: open source ATS head-to-head 🟢 — [`opencats-vs-reqcore.md`](content/blog/opencats-vs-reqcore.md)
+- [ ] Breezy HR vs open source ATS: simplicity compared 🟢
+- [ ] Teamtailor vs open source ATS: employer branding compared 🟢
+- [ ] Pinpoint vs open source ATS: mid-market showdown 🟢
+- [ ] Homerun vs open source ATS: design-first hiring compared 🟢
 
 **Supporting — Decision frameworks:**
 - [ ] ATS features that actually matter (and which are bloat) 🟢
 - [ ] Red flags when evaluating an applicant tracking system 🟢
 - [x] Total cost of ownership: SaaS ATS vs self-hosted open source 🟢 → [Cluster 4]
 - [ ] How to run an ATS proof of concept before committing 🟢
-- [ ] Questions to ask in an ATS demo that vendors don't want you to ask 🟢
 - [ ] The ATS buyer's scorecard: how to evaluate and rank options 🔴
+- [ ] Free ATS vs paid ATS: when to upgrade and what you gain 🟢
 
 ---
 
-### Cluster 1: What Is an Open Source ATS (Foundation Pillar) — 10 articles
+### Cluster 1: What Is an Open Source ATS (Foundation Pillar) — 12 articles
 
 > Build first awareness and capture top-of-funnel informational queries. Establishes the right to rank for everything else.
 
@@ -106,22 +110,24 @@ All articles must follow the SEO Skill ([`.agents/skills/seo-skill/SKILL.md`](.a
 - [x] Open source vs free ATS: why "free" and "open source" aren't the same thing 🔵 — [`open-source-vs-free-ats.md`](content/blog/open-source-vs-free-ats.md)
 - [ ] What does open source licensing mean for ATS software? (MIT, GPL, Apache explained) 🔵
 - [ ] Who uses open source ATS? Use cases by company size and type 🔵 → [Cluster 6]
-- [ ] The true cost of running an open source ATS 🟢 → [Cluster 2]
 - [ ] Is open source ATS secure enough for candidate data? 🔵 → [Cluster 5]
 - [x] What "self-hosted" means and why it matters for recruiting software 🔵 → [Cluster 4] — [`self-hosted-vs-cloud-ats.md`](content/blog/self-hosted-vs-cloud-ats.md)
 - [ ] Open source ATS glossary: 50 terms every recruiter should know 🔵
+- [ ] History of applicant tracking systems: from paper to AI 🔵
+- [ ] Open source ATS for non-profits: unique requirements and options 🔵
+- [ ] Contributing to open source ATS projects: a beginner's guide 🔵
 
 ---
 
-**Phase 1 total: 35 articles** | Progress: 6/35
+**Phase 1 total: 41 articles** | Progress: 6/41
 
 ---
 
-## Phase 2: Differentiation (Weeks 5–8)
+## Phase 2: Differentiation (Weeks 7–11)
 
 > These are Reqcore's moat. No competitor covers transparent AI scoring or self-hosted data ownership with this depth.
 
-### Cluster 3: AI & Automation in Your ATS (Differentiation Cluster) — 17 articles
+### Cluster 3: AI & Automation in Your ATS (Differentiation Cluster) — 16 articles
 
 > Where Reqcore's transparent AI positioning shines. High interest, under-served by competitors.
 
@@ -133,13 +139,10 @@ All articles must follow the SEO Skill ([`.agents/skills/seo-skill/SKILL.md`](.a
 - [ ] AI resume parsing explained: how your ATS reads resumes 🔵
 - [ ] Keyword matching vs semantic matching: how modern ATS rank candidates 🔵
 - [ ] How to configure AI scoring rules that reflect your hiring values 🔵
-- [ ] AI skills extraction: automatically mapping candidate competencies 🔵
 
 **Supporting — Transparency & bias:**
 - [ ] Transparent AI scoring vs black-box algorithms: why it matters 🔵
 - [ ] AI bias in applicant tracking systems: real risks and how to mitigate them 🔵
-- [ ] How to audit your ATS for algorithmic fairness 🔵
-- [ ] Explainable AI in recruiting: why candidates deserve to know how they're scored 🔵
 - [ ] The legal landscape of AI in hiring (NYC Local Law 144, EU AI Act) 🔵 → [Cluster 5]
 
 **Supporting — Practical AI automation:**
@@ -149,10 +152,12 @@ All articles must follow the SEO Skill ([`.agents/skills/seo-skill/SKILL.md`](.a
 - [ ] Automated email sequences for candidate nurturing in your ATS 🔵
 - [ ] Using LLMs to summarize interview feedback 🔵
 - [ ] When AI should NOT make the hiring decision 🔵
+- [ ] AI-generated interview questions based on job requirements 🔵
+- [ ] Building custom AI scoring models for niche roles 🔵
 
 ---
 
-### Cluster 4: Self-Hosting, Data Ownership & Setup (Moat Cluster) — 16 articles
+### Cluster 4: Self-Hosting, Data Ownership & Setup (Moat Cluster) — 17 articles
 
 > Nobody else writes this content well. Own the conversation and build unique authority.
 
@@ -163,7 +168,6 @@ All articles must follow the SEO Skill ([`.agents/skills/seo-skill/SKILL.md`](.a
 - [ ] Why data ownership matters in recruiting technology 🔵
 - [ ] Vendor lock-in in ATS: how it happens and how to avoid it 🔵
 - [ ] What happens to your candidate data when your ATS vendor shuts down 🔵
-- [ ] Data portability in recruiting: why it should be non-negotiable 🔵
 - [ ] Self-hosted vs cloud ATS: a data ownership perspective 🟢 → [Cluster 2]
 
 **Supporting — Deployment guides:**
@@ -179,6 +183,8 @@ All articles must follow the SEO Skill ([`.agents/skills/seo-skill/SKILL.md`](.a
 - [ ] Scaling your self-hosted ATS as your team grows 🔵
 - [ ] ATS security hardening: SSL, access control, and audit logs 🔵 → [Cluster 5]
 - [ ] Cost breakdown: self-hosted ATS infrastructure month by month 🟢 → [Cluster 2]
+- [ ] Self-hosted ATS performance tuning: database and caching optimization 🔵
+- [ ] Multi-tenant vs single-tenant ATS: architecture decisions for self-hosting 🔵
 
 ---
 
@@ -186,11 +192,11 @@ All articles must follow the SEO Skill ([`.agents/skills/seo-skill/SKILL.md`](.a
 
 ---
 
-## Phase 3: Practitioner Depth (Weeks 9–12)
+## Phase 3: Practitioner Depth (Weeks 9–14)
 
 > High dwell-time content that proves genuine usefulness via `lastLongestClicks`. Feeds Reddit strategy — how-tos and metric breakdowns are highly shareable.
 
-### Cluster 6: ATS Setup, Workflows & Daily Use (Practitioner Cluster) — 16 articles
+### Cluster 6: ATS Setup, Workflows & Daily Use (Practitioner Cluster) — 11 articles
 
 > Targets people who already have (or are about to get) an ATS. Long reads, how-tos, step-by-steps.
 
@@ -205,22 +211,15 @@ All articles must follow the SEO Skill ([`.agents/skills/seo-skill/SKILL.md`](.a
 - [ ] Customizing application forms for different roles 🔵
 - [ ] Setting up your first job posting in an open source ATS 🔵
 
-**Supporting — Integrations:**
-- [ ] How to integrate your ATS with job boards (Indeed, LinkedIn) 🔵
-- [ ] Calendar and scheduling integrations for your ATS 🔵
-- [ ] Slack and Teams integrations for hiring collaboration 🔵
-- [ ] Zapier and n8n automation workflows for your ATS 🔵
-- [ ] How to build a career page connected to your ATS 🔵 → [Cluster 8]
-- [ ] Using your ATS API: developer quickstart guide 🔵
-
-**Supporting — Migration:**
-- [ ] How to migrate from spreadsheets to an ATS 🟢 → [Cluster 2]
-- [ ] How to migrate candidate data between ATS platforms 🔵
-- [ ] How to export your data from Greenhouse / Lever / Workable 🔵 → [Cluster 4]
+**Supporting — Daily use:**
+- [ ] Collaborative hiring: scorecards, feedback loops, and team workflows 🔵
+- [ ] Structured interviews: configuring your ATS for consistency 🔵
+- [ ] Offer letter management and e-signatures in your ATS 🔵
+- [ ] Candidate communication templates: beyond the first email 🔵
 
 ---
 
-### Cluster 7: Recruiting Metrics & ATS Analytics (Data Cluster) — 15 articles
+### Cluster 7: Recruiting Metrics & ATS Analytics (Data Cluster) — 16 articles
 
 > Data-driven content demonstrating expertise. Recruiter leaders search these when building reports for leadership.
 
@@ -238,7 +237,6 @@ All articles must follow the SEO Skill ([`.agents/skills/seo-skill/SKILL.md`](.a
 - [ ] Pipeline conversion rates: diagnosing where you lose candidates 🔵
 - [ ] Candidate drop-off analysis: finding and fixing bottlenecks 🔵
 - [ ] Recruiter productivity metrics: what to measure without micromanaging 🔵
-- [ ] Application completion rate: how your forms affect your funnel 🔵 → [Cluster 6]
 
 **Supporting — Reporting:**
 - [ ] How to build a recruiting dashboard with your ATS data 🔵
@@ -246,14 +244,45 @@ All articles must follow the SEO Skill ([`.agents/skills/seo-skill/SKILL.md`](.a
 - [ ] Using ATS data to forecast hiring needs 🔵
 - [ ] Diversity hiring metrics: what to track and how 🔵
 - [ ] How to benchmark your recruiting against industry standards 🔵
+- [ ] ATS ROI: how to prove the value of your applicant tracking system 🔵
+- [ ] Funnel visualization: turning ATS data into actionable pipeline charts 🔵
 
 ---
 
-**Phase 3 total: 31 articles** | Progress: 0/31
+### Cluster 10: ATS Integrations & Ecosystem (Integration Cluster) — 15 articles
+
+> Dedicated cluster for the growing "ATS integrations" search space. People evaluating or setting up an ATS actively search for integration guides. Pulls integration content out of Cluster 6 for deeper coverage.
+
+**Pillar:**
+- [ ] The complete guide to ATS integrations: building your recruiting tech stack 🔵
+
+**Supporting — Communication & collaboration:**
+- [ ] How to integrate your ATS with job boards (Indeed, LinkedIn, ZipRecruiter) 🔵
+- [ ] Slack and Teams integrations for hiring collaboration 🔵
+- [ ] Calendar and scheduling integrations for your ATS 🔵 → [Cluster 6]
+
+**Supporting — HR tech stack:**
+- [ ] HRIS and ATS integration: connecting HR systems to your hiring pipeline 🔵
+- [ ] Background check integrations for your ATS 🔵 → [Cluster 5]
+- [ ] Assessment and skills testing integrations for your ATS 🔵
+- [ ] Video interview platform integrations for your ATS 🔵
+- [ ] Payroll and onboarding integrations: from offer accepted to day one 🔵
+- [ ] CRM and ATS: connecting candidate relationship management 🔵
+
+**Supporting — Developer & automation:**
+- [ ] Using your ATS API: developer quickstart guide 🔵
+- [ ] ATS webhook guide: real-time event-driven integrations 🔵
+- [ ] Zapier and n8n automation workflows for your ATS 🔵
+- [ ] SSO and identity provider integration for your ATS (SAML, OIDC) 🔵 → [Cluster 5]
+- [ ] Building custom ATS integrations with open source tools 🔵 → [Cluster 4]
 
 ---
 
-## Phase 4: Trust + Conversion (Weeks 13–16)
+**Phase 3 total: 42 articles** | Progress: 0/42
+
+---
+
+## Phase 4: Trust + Conversion (Weeks 15–20)
 
 > Compliance content attracts backlinks from legal/HR blogs. Migration content converts people convinced by comparison posts.
 
@@ -286,7 +315,7 @@ All articles must follow the SEO Skill ([`.agents/skills/seo-skill/SKILL.md`](.a
 
 ---
 
-### Cluster 8: Career Pages & Employer Brand (Conversion Cluster) — 9 articles
+### Cluster 8: Career Pages & Employer Brand (Conversion Cluster) — 11 articles
 
 > Captures people optimizing their hiring presence. Naturally links to ATS setup and integrations.
 
@@ -302,29 +331,35 @@ All articles must follow the SEO Skill ([`.agents/skills/seo-skill/SKILL.md`](.a
 - [ ] How your ATS shapes the candidate experience 🔵
 - [ ] Employer branding on a budget for small teams 🔵
 - [ ] How to A/B test your job application flow with ATS data 🔵 → [Cluster 7]
+- [ ] Accessible career pages: WCAG compliance and inclusive design 🔵
+- [ ] Multilingual career pages: reaching candidates in their language 🔵
 
 ---
 
-### Cluster 9: Migration & Switching ATS (Action Cluster) — 9 articles
+### Cluster 9: Migration & Switching ATS (Action Cluster) — 11 articles
 
 > Pure conversion content. People searching these are ready to switch. Tightest path to Reqcore adoption.
 
 **Pillar:**
 - [ ] How to switch your ATS without losing data or momentum 🔴
 
-**Supporting:**
+**Supporting — Evaluation:**
 - [ ] Signs it's time to replace your current ATS 🟢
 - [ ] How to convince your team to switch ATS platforms 🟢
 - [ ] The real cost of switching ATS (time, data, disruption) 🟢 → [Cluster 2]
+- [ ] ATS vendor evaluation checklist: what to verify before you commit 🔴
+
+**Supporting — Execution:**
 - [ ] ATS data migration checklist: nothing gets left behind 🔴
-- [ ] How to export candidate data from any ATS 🔵 → [Cluster 4]
+- [ ] How to export your data from Greenhouse / Lever / Workable 🔵 → [Cluster 4]
+- [ ] How to migrate from spreadsheets to an ATS 🟢 → [Cluster 2]
 - [ ] Mapping fields between ATS platforms: the data translation guide 🔵
 - [ ] How to handle duplicate candidates during migration 🔵
 - [ ] Post-migration validation: making sure nothing broke 🔵
 
 ---
 
-**Phase 4 total: 33 articles** | Progress: 0/33
+**Phase 4 total: 37 articles** | Progress: 0/37
 
 ---
 
@@ -356,18 +391,23 @@ After Phase 4, return to Phase 1 content and upgrade:
       │  Cluster 2   │ │Cluster 4 │ │  Cluster 3   │
       │ Comparisons  │ │Data Own. │ │  AI & Auto   │
       │  (MONEY)     │ │ (MOAT)   │ │  (DIFFER.)   │
-      └──┬───────┬───┘ └──┬───────┘ └──┬───────────┘
-         │       │         │            │
-         │  ┌────▼─────────▼──┐    ┌────▼──────────┐
-         │  │   Cluster 5     │    │   Cluster 6   │
-         │  │  Compliance     │    │  Setup & Use  │
-         │  └─────────────────┘    └────┬──────────┘
-         │                              │
-    ┌────▼────────┐  ┌─────────────┐ ┌──▼───────────┐
-    │  Cluster 9  │  │  Cluster 8  │ │  Cluster 7   │
-    │  Migration  │  │Career Pages │ │   Metrics    │
-    │  (ACTION)   │  │             │ │              │
-    └─────────────┘  └─────────────┘ └──────────────┘
+      └──┬───────┬───┘ └──┬───┬───┘ └──┬───────────┘
+         │       │         │   │        │
+         │  ┌────▼─────────▼┐  │   ┌────▼──────────┐
+         │  │   Cluster 5   │  │   │   Cluster 6   │
+         │  │  Compliance   │  │   │  Setup & Use  │
+         │  └───────────────┘  │   └──┬─────┬──────┘
+         │                     │      │     │
+    ┌────▼────────┐   ┌───────▼──────▼┐ ┌──▼───────────┐
+    │  Cluster 9  │   │  Cluster 10   │ │  Cluster 7   │
+    │  Migration  │   │ Integrations  │ │   Metrics    │
+    │  (ACTION)   │   │ (ECOSYSTEM)   │ │              │
+    └─────────────┘   └───────┬───────┘ └──────────────┘
+                              │
+                       ┌──────▼──────┐
+                       │  Cluster 8  │
+                       │Career Pages │
+                       └─────────────┘
 ```
 
 ### Key Cross-Cluster Links
@@ -376,7 +416,6 @@ After Phase 4, return to Phase 1 content and upgrade:
 |---|---|
 | Open source vs proprietary ATS (C1) | Cluster 2 pillar |
 | Who uses open source ATS? (C1) | Cluster 6 pillar |
-| The true cost of running an open source ATS (C1) | Cluster 2 pillar |
 | Is open source ATS secure enough? (C1) | Cluster 5 pillar |
 | Self-hosted means… (C1) | Cluster 4 pillar |
 | Best ATS with transparent AI scoring (C2) | Cluster 3 pillar |
@@ -388,14 +427,15 @@ After Phase 4, return to Phase 1 content and upgrade:
 | Cost breakdown: self-hosted infrastructure (C4) | Cluster 2 pillar |
 | AI hiring regulations (C5) | Cluster 3 pillar |
 | Candidate data encryption (C5) | Cluster 4 pillar |
-| How to build a career page (C6) | Cluster 8 pillar |
-| Migrate from spreadsheets (C6) | Cluster 2 pillar |
-| Export data from Greenhouse/Lever/Workable (C6) | Cluster 4 pillar |
-| Application completion rate (C7) | Cluster 6 pillar |
+| Calendar and scheduling integrations (C10) | Cluster 6 pillar |
+| Background check integrations (C10) | Cluster 5 pillar |
+| SSO and identity provider integration (C10) | Cluster 5 pillar |
+| Building custom ATS integrations (C10) | Cluster 4 pillar |
 | Application form design (C8) | Cluster 7 pillar |
 | A/B test application flow (C8) | Cluster 7 pillar |
 | Real cost of switching ATS (C9) | Cluster 2 pillar |
-| Export candidate data from any ATS (C9) | Cluster 4 pillar |
+| Export data from Greenhouse/Lever/Workable (C9) | Cluster 4 pillar |
+| Migrate from spreadsheets (C9) | Cluster 2 pillar |
 
 ---
 
@@ -403,16 +443,17 @@ After Phase 4, return to Phase 1 content and upgrade:
 
 | Cluster | Phase | Articles | Done | Remaining |
 |---------|-------|----------|------|-----------|
-| 1. Fundamentals | 1 | 10 | 4 | 6 |
-| 2. Comparisons | 1 | 25 | 2 | 23 |
-| 3. AI & Automation | 2 | 17 | 0 | 17 |
-| 4. Data Ownership | 2 | 16 | 0 | 16 |
+| 1. Fundamentals | 1 | 12 | 4 | 8 |
+| 2. Comparisons | 1 | 29 | 5 | 24 |
+| 3. AI & Automation | 2 | 16 | 0 | 16 |
+| 4. Data Ownership | 2 | 17 | 0 | 17 |
 | 5. Compliance | 4 | 15 | 0 | 15 |
-| 6. Setup & Workflows | 3 | 16 | 0 | 16 |
-| 7. Metrics | 3 | 15 | 0 | 15 |
-| 8. Career Pages | 4 | 9 | 0 | 9 |
-| 9. Migration | 4 | 9 | 0 | 9 |
-| **Total** | | **132** | **6** | **126** |
+| 6. Setup & Workflows | 3 | 11 | 0 | 11 |
+| 7. Metrics | 3 | 16 | 0 | 16 |
+| 8. Career Pages | 4 | 11 | 0 | 11 |
+| 9. Migration | 4 | 11 | 0 | 11 |
+| 10. Integrations | 3 | 15 | 0 | 15 |
+| **Total** | | **153** | **9** | **144** |
 
 ---
 

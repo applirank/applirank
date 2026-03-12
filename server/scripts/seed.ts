@@ -9,11 +9,15 @@
  * - 65+ applications across all pipeline stages
  * - Custom questions on select jobs
  * - Question responses on applications
+ * - CV/resume document records for candidates in screening+ stages
+ * - Interview schedules for candidates in interview/offer/hired stages
  *
  * Usage: npx tsx server/scripts/seed.ts
  * Requires DATABASE_URL in .env (loaded via dotenv or shell env).
  *
  * Idempotent — checks if demo org exists before running.
+ * Documents & interviews are additive — they are seeded even for
+ * existing orgs, but skipped if interviews already exist.
  */
 
 import { drizzle } from 'drizzle-orm/postgres-js'
@@ -96,6 +100,19 @@ function id(): string {
 function daysAgo(n: number): Date {
   const d = new Date()
   d.setDate(d.getDate() - n)
+  return d
+}
+
+function daysFromNow(n: number): Date {
+  const d = new Date()
+  d.setDate(d.getDate() + n)
+  return d
+}
+
+/** Set hour-of-day on an existing Date (keeps the date). */
+function atHour(date: Date, hour: number, minute = 0): Date {
+  const d = new Date(date)
+  d.setHours(hour, minute, 0, 0)
   return d
 }
 
@@ -493,6 +510,10 @@ async function seed() {
 
     console.log('⚠️  Demo organization already exists. Skipping full seed.')
     console.log('   To re-seed all data, delete the organization first or reset the database.')
+
+    // Always seed documents & interviews even for existing orgs
+    await seedDocumentsAndInterviews(existingOrg.id, userId)
+
     await client.end()
     return
   }
@@ -663,6 +684,9 @@ async function seed() {
 
   console.log(`✅ Created ${totalApps} applications with pipeline distribution`)
 
+  // 7. Seed documents and interviews
+  await seedDocumentsAndInterviews(orgId, userId)
+
   // Summary
   const statusCounts: Record<string, number> = {}
   for (const apps of JOB_APPLICATIONS) {
@@ -683,6 +707,262 @@ async function seed() {
   console.log(`\n   Then select "${DEMO_ORG_NAME}" as your organization.`)
 
   await client.end()
+}
+
+// ─────────────────────────────────────────────
+// Seed Documents & Interviews
+// ─────────────────────────────────────────────
+
+async function seedDocumentsAndInterviews(orgId: string, userId: string) {
+  // Idempotency: skip if interviews already exist for this org
+  const [existingInterview] = await db
+    .select({ id: schema.interview.id })
+    .from(schema.interview)
+    .where(eq(schema.interview.organizationId, orgId))
+    .limit(1)
+
+  if (existingInterview) {
+    console.log('ℹ️  Documents & interviews already seeded. Skipping.')
+    return
+  }
+
+  // ── Fetch existing data ──────────────────────────────────────
+
+  const candidates = await db
+    .select({ id: schema.candidate.id, firstName: schema.candidate.firstName, lastName: schema.candidate.lastName })
+    .from(schema.candidate)
+    .where(eq(schema.candidate.organizationId, orgId))
+
+  const applications = await db
+    .select({
+      id: schema.application.id,
+      candidateId: schema.application.candidateId,
+      jobId: schema.application.jobId,
+      status: schema.application.status,
+    })
+    .from(schema.application)
+    .where(eq(schema.application.organizationId, orgId))
+
+  const jobs = await db
+    .select({ id: schema.job.id, title: schema.job.title })
+    .from(schema.job)
+    .where(eq(schema.job.organizationId, orgId))
+
+  const jobTitleById = new Map(jobs.map(j => [j.id, j.title]))
+  const candidateById = new Map(candidates.map(c => [c.id, c]))
+
+  // ── Seed Documents (CVs) ─────────────────────────────────────
+  // Add a resume for every candidate who has at least one application
+  // that progressed past 'new' (i.e. screening, interview, offer, hired).
+  const advancedStatuses = new Set(['screening', 'interview', 'offer', 'hired'])
+  const candidatesWithAdvancedApps = new Set<string>()
+  for (const app of applications) {
+    if (advancedStatuses.has(app.status)) {
+      candidatesWithAdvancedApps.add(app.candidateId)
+    }
+  }
+
+  let docsCreated = 0
+  for (const candidateId of candidatesWithAdvancedApps) {
+    const c = candidateById.get(candidateId)
+    if (!c) continue
+
+    const docId = id()
+    const filename = `${c.firstName.toLowerCase()}_${c.lastName.toLowerCase().replace(/[\s']/g, '')}_resume.pdf`
+    const storageKey = `${orgId}/${candidateId}/${docId}.pdf`
+    const sizeBytes = 120_000 + Math.floor(Math.random() * 380_000) // 120 KB – 500 KB
+
+    await db.insert(schema.document).values({
+      id: docId,
+      organizationId: orgId,
+      candidateId,
+      type: 'resume',
+      storageKey,
+      originalFilename: filename,
+      mimeType: 'application/pdf',
+      sizeBytes,
+      createdAt: daysAgo(5 + Math.floor(Math.random() * 10)),
+    })
+    docsCreated++
+  }
+
+  console.log(`✅ Created ${docsCreated} demo CV/resume document records`)
+
+  // ── Seed Interviews ──────────────────────────────────────────
+  // Create realistic interview schedules for applications in
+  // interview / offer / hired stages.
+
+  type InterviewSeedRow = {
+    applicationId: string
+    title: string
+    type: 'phone' | 'video' | 'in_person' | 'panel' | 'technical' | 'take_home'
+    status: 'scheduled' | 'completed' | 'cancelled' | 'no_show'
+    scheduledAt: Date
+    duration: number
+    location: string | null
+    notes: string | null
+    interviewers: string[]
+    candidateResponse: 'pending' | 'accepted' | 'declined' | 'tentative'
+    candidateRespondedAt: Date | null
+    invitationSentAt: Date | null
+  }
+
+  const interviewRows: InterviewSeedRow[] = []
+
+  for (const app of applications) {
+    const candidateName = candidateById.get(app.candidateId)
+    const jobTitle = jobTitleById.get(app.jobId) ?? 'Unknown Role'
+    if (!candidateName) continue
+    const fullName = `${candidateName.firstName} ${candidateName.lastName}`
+
+    if (app.status === 'interview') {
+      // Completed phone screen + upcoming technical interview
+      interviewRows.push({
+        applicationId: app.id,
+        title: `Phone Screen – ${fullName}`,
+        type: 'phone',
+        status: 'completed',
+        scheduledAt: atHour(daysAgo(5), 10),
+        duration: 30,
+        location: null,
+        notes: `Initial phone screen for ${jobTitle}. Discussed motivation, experience, and availability.`,
+        interviewers: ['Demo Recruiter'],
+        candidateResponse: 'accepted',
+        candidateRespondedAt: daysAgo(8),
+        invitationSentAt: daysAgo(9),
+      })
+      interviewRows.push({
+        applicationId: app.id,
+        title: `Technical Interview – ${fullName}`,
+        type: 'technical',
+        status: 'scheduled',
+        scheduledAt: atHour(daysFromNow(3), 14),
+        duration: 60,
+        location: 'https://meet.google.com/demo-reqcore-tech',
+        notes: `Live coding & system design discussion for ${jobTitle}.`,
+        interviewers: ['Demo Recruiter', 'Tech Lead'],
+        candidateResponse: 'accepted',
+        candidateRespondedAt: daysAgo(1),
+        invitationSentAt: daysAgo(2),
+      })
+    }
+    else if (app.status === 'offer') {
+      // Completed phone screen + completed technical + completed panel
+      interviewRows.push({
+        applicationId: app.id,
+        title: `Phone Screen – ${fullName}`,
+        type: 'phone',
+        status: 'completed',
+        scheduledAt: atHour(daysAgo(14), 11),
+        duration: 30,
+        location: null,
+        notes: 'Great initial call. Strong communication and role alignment.',
+        interviewers: ['Demo Recruiter'],
+        candidateResponse: 'accepted',
+        candidateRespondedAt: daysAgo(17),
+        invitationSentAt: daysAgo(18),
+      })
+      interviewRows.push({
+        applicationId: app.id,
+        title: `Technical Interview – ${fullName}`,
+        type: 'technical',
+        status: 'completed',
+        scheduledAt: atHour(daysAgo(10), 14),
+        duration: 60,
+        location: 'https://meet.google.com/demo-reqcore-tech',
+        notes: `Solid ${jobTitle} technical discussion. Clean problem-solving approach.`,
+        interviewers: ['Demo Recruiter', 'Tech Lead'],
+        candidateResponse: 'accepted',
+        candidateRespondedAt: daysAgo(13),
+        invitationSentAt: daysAgo(14),
+      })
+      interviewRows.push({
+        applicationId: app.id,
+        title: `Panel Interview – ${fullName}`,
+        type: 'panel',
+        status: 'completed',
+        scheduledAt: atHour(daysAgo(6), 10),
+        duration: 45,
+        location: 'Reqcore HQ, Berlin – Meeting Room 3',
+        notes: 'Cross-functional panel. Strong culture fit and leadership examples.',
+        interviewers: ['Demo Recruiter', 'Tech Lead', 'VP Engineering'],
+        candidateResponse: 'accepted',
+        candidateRespondedAt: daysAgo(9),
+        invitationSentAt: daysAgo(10),
+      })
+    }
+    else if (app.status === 'hired') {
+      // Full completed loop: phone → technical → panel
+      interviewRows.push({
+        applicationId: app.id,
+        title: `Phone Screen – ${fullName}`,
+        type: 'phone',
+        status: 'completed',
+        scheduledAt: atHour(daysAgo(20), 9),
+        duration: 30,
+        location: null,
+        notes: 'Excellent initial impression. Fast-tracked to technical.',
+        interviewers: ['Demo Recruiter'],
+        candidateResponse: 'accepted',
+        candidateRespondedAt: daysAgo(23),
+        invitationSentAt: daysAgo(24),
+      })
+      interviewRows.push({
+        applicationId: app.id,
+        title: `Technical Interview – ${fullName}`,
+        type: 'technical',
+        status: 'completed',
+        scheduledAt: atHour(daysAgo(15), 14, 30),
+        duration: 90,
+        location: 'https://meet.google.com/demo-reqcore-tech',
+        notes: 'Outstanding performance. Top candidate in cohort.',
+        interviewers: ['Demo Recruiter', 'Tech Lead'],
+        candidateResponse: 'accepted',
+        candidateRespondedAt: daysAgo(18),
+        invitationSentAt: daysAgo(19),
+      })
+      interviewRows.push({
+        applicationId: app.id,
+        title: `Final Panel – ${fullName}`,
+        type: 'panel',
+        status: 'completed',
+        scheduledAt: atHour(daysAgo(10), 11),
+        duration: 60,
+        location: 'Reqcore HQ, Berlin – Meeting Room 3',
+        notes: 'Unanimous positive feedback. Offer approved.',
+        interviewers: ['Demo Recruiter', 'Tech Lead', 'VP Engineering', 'CEO'],
+        candidateResponse: 'accepted',
+        candidateRespondedAt: daysAgo(13),
+        invitationSentAt: daysAgo(14),
+      })
+    }
+  }
+
+  // Batch-insert all interviews
+  for (const row of interviewRows) {
+    await db.insert(schema.interview).values({
+      id: id(),
+      organizationId: orgId,
+      applicationId: row.applicationId,
+      title: row.title,
+      type: row.type,
+      status: row.status,
+      scheduledAt: row.scheduledAt,
+      duration: row.duration,
+      location: row.location,
+      notes: row.notes,
+      interviewers: row.interviewers,
+      createdById: userId,
+      invitationSentAt: row.invitationSentAt,
+      candidateResponse: row.candidateResponse,
+      candidateRespondedAt: row.candidateRespondedAt,
+      timezone: 'Europe/Berlin',
+      createdAt: row.invitationSentAt ?? daysAgo(10),
+      updatedAt: row.candidateRespondedAt ?? daysAgo(5),
+    })
+  }
+
+  console.log(`✅ Created ${interviewRows.length} demo interview records`)
 }
 
 // ─────────────────────────────────────────────
