@@ -34,9 +34,6 @@ RUN addgroup -S reqcore && adduser -S reqcore -G reqcore
 # .output is fully self-contained (server, public assets)
 COPY --chown=reqcore:reqcore --from=builder /app/.output ./.output
 
-# @nuxt/content SQLite database — built during `npm run build`, stored outside .output
-COPY --chown=reqcore:reqcore --from=builder /app/.data ./.data
-
 # Drizzle migrations are loaded at runtime via a relative path ("./server/database/migrations")
 # They must live alongside .output so the path resolves correctly inside the container
 COPY --chown=reqcore:reqcore --from=builder /app/server/database/migrations ./server/database/migrations
