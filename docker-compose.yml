@@ -52,6 +52,8 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+    volumes:
+      - backups_data:/data/backups
 
   # Optional DB browser — run with: docker compose --profile tools up
   adminer:
@@ -68,3 +70,4 @@ services:
 volumes:
   postgres_data:
   minio_data:
+  backups_data:

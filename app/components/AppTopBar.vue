@@ -4,7 +4,7 @@ import {
   Kanban, FileText, LogOut, Table2,
   Sun, Moon, MessageSquarePlus, Settings,
   ChevronDown, Menu, X, Users, ChevronLeft,
-  LayoutDashboard, Calendar,
+  LayoutDashboard, Calendar, ArrowUpCircle,
 } from 'lucide-vue-next'
 
 const route = useRoute()
@@ -195,6 +195,19 @@ onUnmounted(() => document.removeEventListener('click', onClickOutsideUser))
             <Sun v-if="isDark" class="size-4" />
             <Moon v-else class="size-4" />
           </button>
+
+          <!-- Updates button -->
+          <NuxtLink
+            :to="$localePath('/dashboard/updates')"
+            class="hidden sm:flex items-center justify-center size-8 rounded-lg transition-all duration-200 no-underline"
+            :class="isActiveRoute('/dashboard/updates', false)
+              ? 'text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/40'
+              : 'text-surface-500 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-200 hover:bg-surface-100 dark:hover:bg-surface-800'"
+            title="Updates & changelog"
+            aria-label="Updates & changelog"
+          >
+            <ArrowUpCircle class="size-4" />
+          </NuxtLink>
 
           <!-- Feedback button -->
           <button
