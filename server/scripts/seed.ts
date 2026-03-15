@@ -9,6 +9,7 @@
  * - 65+ applications across all pipeline stages
  * - Custom questions on select jobs
  * - Question responses on applications
+ * - 35+ scheduled/completed interviews across the pipeline
  *
  * Usage: npx tsx server/scripts/seed.ts
  * Requires DATABASE_URL in .env (loaded via dotenv or shell env).
@@ -96,6 +97,14 @@ function id(): string {
 function daysAgo(n: number): Date {
   const d = new Date()
   d.setDate(d.getDate() - n)
+  return d
+}
+
+/** Create a date offset from today with a specific time. Positive = future, negative = past. */
+function dateWithOffset(daysOffset: number, hour: number, minute: number = 0): Date {
+  const d = new Date()
+  d.setDate(d.getDate() + daysOffset)
+  d.setHours(hour, minute, 0, 0)
   return d
 }
 
@@ -311,6 +320,451 @@ const JOB_4_APPS: ApplicationAssignment[] = [
 ]
 
 const JOB_APPLICATIONS = [JOB_0_APPS, JOB_1_APPS, JOB_2_APPS, JOB_3_APPS, JOB_4_APPS]
+
+// ─────────────────────────────────────────────
+// Interview definitions — realistic multi-stage loops
+// ─────────────────────────────────────────────
+
+interface InterviewSeed {
+  jobIndex: number
+  candidateIndex: number
+  title: string
+  type: 'phone' | 'video' | 'in_person' | 'panel' | 'technical' | 'take_home'
+  status: 'scheduled' | 'completed' | 'cancelled' | 'no_show'
+  /** Days from seed date. Positive = future, negative = past. */
+  daysOffset: number
+  hour: number
+  minute?: number
+  duration: number
+  location: string | null
+  notes: string | null
+  interviewers: string[]
+  candidateResponse: 'pending' | 'accepted' | 'declined' | 'tentative'
+  timezone: string
+}
+
+const INTERVIEWS_DATA: InterviewSeed[] = [
+  // ──────────────────────────────────────────
+  // Job 0: Senior Full-Stack Engineer
+  // ──────────────────────────────────────────
+
+  // Emma Schmidt (hired) — full 3-round loop, all completed
+  {
+    jobIndex: 0, candidateIndex: 0,
+    title: 'Initial Phone Screen',
+    type: 'phone', status: 'completed',
+    daysOffset: -18, hour: 10, duration: 30,
+    location: null,
+    notes: 'Strong communication skills. Clear motivation and relevant experience. Advancing to technical round.',
+    interviewers: ['Anna Weiss'],
+    candidateResponse: 'accepted',
+    timezone: 'Europe/Berlin',
+  },
+  {
+    jobIndex: 0, candidateIndex: 0,
+    title: 'Technical Interview — System Design & Coding',
+    type: 'technical', status: 'completed',
+    daysOffset: -12, hour: 14, duration: 90,
+    location: 'Google Meet',
+    notes: 'Exceptional system design approach. Solved the distributed caching problem elegantly. Strong TypeScript patterns and testing discipline.',
+    interviewers: ['Marcus Reiter', 'Sarah Chen'],
+    candidateResponse: 'accepted',
+    timezone: 'Europe/Berlin',
+  },
+  {
+    jobIndex: 0, candidateIndex: 0,
+    title: 'Final Panel — Culture & Leadership',
+    type: 'panel', status: 'completed',
+    daysOffset: -7, hour: 11, duration: 60,
+    location: 'Reqcore HQ, Friedrichstraße 123, Berlin',
+    notes: 'Unanimous strong hire from the panel. Great leadership examples and clear alignment with team values. Offer approved.',
+    interviewers: ['Thomas Berger', 'Sarah Chen', 'Lisa Hoffmann'],
+    candidateResponse: 'accepted',
+    timezone: 'Europe/Berlin',
+  },
+
+  // Liam Müller (offer) — 3 rounds completed, offer pending
+  {
+    jobIndex: 0, candidateIndex: 1,
+    title: 'Recruiter Screen',
+    type: 'phone', status: 'completed',
+    daysOffset: -16, hour: 9, minute: 30, duration: 30,
+    location: null,
+    notes: 'Well-prepared candidate. Salary expectations within band. Moving forward.',
+    interviewers: ['Anna Weiss'],
+    candidateResponse: 'accepted',
+    timezone: 'Europe/Berlin',
+  },
+  {
+    jobIndex: 0, candidateIndex: 1,
+    title: 'Technical Deep-Dive — Full-Stack Architecture',
+    type: 'technical', status: 'completed',
+    daysOffset: -10, hour: 15, duration: 90,
+    location: 'Google Meet',
+    notes: 'Excellent systems thinking. Strong PostgreSQL optimization knowledge. Good tradeoff analysis on caching strategies.',
+    interviewers: ['Marcus Reiter', 'Daniel Krause'],
+    candidateResponse: 'accepted',
+    timezone: 'Europe/Berlin',
+  },
+  {
+    jobIndex: 0, candidateIndex: 1,
+    title: 'Hiring Manager Interview',
+    type: 'video', status: 'completed',
+    daysOffset: -5, hour: 13, duration: 45,
+    location: 'Google Meet',
+    notes: 'Great cultural fit. Proactive mindset and excellent collaboration examples. Preparing offer package.',
+    interviewers: ['Sarah Chen'],
+    candidateResponse: 'accepted',
+    timezone: 'Europe/Berlin',
+  },
+
+  // Sofia Dubois (offer) — 2 rounds completed
+  {
+    jobIndex: 0, candidateIndex: 2,
+    title: 'Introductory Call',
+    type: 'phone', status: 'completed',
+    daysOffset: -14, hour: 11, duration: 30,
+    location: null,
+    notes: 'Strong backend focus with solid frontend skills. Motivated by the open-source mission.',
+    interviewers: ['Anna Weiss'],
+    candidateResponse: 'accepted',
+    timezone: 'Europe/Paris',
+  },
+  {
+    jobIndex: 0, candidateIndex: 2,
+    title: 'Technical Assessment — Live Coding',
+    type: 'technical', status: 'completed',
+    daysOffset: -8, hour: 14, minute: 30, duration: 75,
+    location: 'Google Meet',
+    notes: 'Clean code structure and strong testing habits. Handled edge cases well during the API design exercise.',
+    interviewers: ['Marcus Reiter'],
+    candidateResponse: 'accepted',
+    timezone: 'Europe/Paris',
+  },
+
+  // Noah van der Berg (interview) — 1 completed, 1 upcoming
+  {
+    jobIndex: 0, candidateIndex: 3,
+    title: 'Recruiter Phone Screen',
+    type: 'phone', status: 'completed',
+    daysOffset: -6, hour: 10, duration: 30,
+    location: null,
+    notes: 'Good technical background. Previous multi-tenant SaaS experience. Proceeding to technical round.',
+    interviewers: ['Anna Weiss'],
+    candidateResponse: 'accepted',
+    timezone: 'Europe/Amsterdam',
+  },
+  {
+    jobIndex: 0, candidateIndex: 3,
+    title: 'Technical Interview — Architecture & Problem Solving',
+    type: 'technical', status: 'scheduled',
+    daysOffset: 3, hour: 14, duration: 90,
+    location: 'Google Meet',
+    notes: 'Focus on system design, database modeling, and real-time collaboration patterns.',
+    interviewers: ['Marcus Reiter', 'Sarah Chen'],
+    candidateResponse: 'accepted',
+    timezone: 'Europe/Amsterdam',
+  },
+
+  // Olivia Rossi (interview) — 1 upcoming
+  {
+    jobIndex: 0, candidateIndex: 4,
+    title: 'Initial Video Screen',
+    type: 'video', status: 'scheduled',
+    daysOffset: 2, hour: 11, duration: 45,
+    location: 'Google Meet',
+    notes: 'Review portfolio projects and discuss full-stack experience with Vue/Nuxt.',
+    interviewers: ['Sarah Chen'],
+    candidateResponse: 'accepted',
+    timezone: 'Europe/Rome',
+  },
+
+  // James O\'Brien (interview) — 1 upcoming, pending response
+  {
+    jobIndex: 0, candidateIndex: 5,
+    title: 'Phone Screen',
+    type: 'phone', status: 'scheduled',
+    daysOffset: 5, hour: 15, duration: 30,
+    location: null,
+    notes: 'Discuss background, role expectations, and availability.',
+    interviewers: ['Anna Weiss'],
+    candidateResponse: 'pending',
+    timezone: 'Europe/London',
+  },
+
+  // ──────────────────────────────────────────
+  // Job 1: Product Designer
+  // ──────────────────────────────────────────
+
+  // David Kim (offer) — 2 rounds completed
+  {
+    jobIndex: 1, candidateIndex: 14,
+    title: 'Portfolio Review & Design Discussion',
+    type: 'video', status: 'completed',
+    daysOffset: -15, hour: 10, duration: 60,
+    location: 'Google Meet',
+    notes: 'Exceptional portfolio depth. Clear articulation of design decisions and business impact. Strong systems thinking.',
+    interviewers: ['Julia Engel'],
+    candidateResponse: 'accepted',
+    timezone: 'Asia/Seoul',
+  },
+  {
+    jobIndex: 1, candidateIndex: 14,
+    title: 'Design Challenge Debrief & Team Fit',
+    type: 'panel', status: 'completed',
+    daysOffset: -8, hour: 9, duration: 75,
+    location: 'Google Meet',
+    notes: 'Design challenge solution was thoughtful and user-centered. Excellent collaboration style during critique. Strong hire recommendation.',
+    interviewers: ['Julia Engel', 'Lisa Hoffmann', 'Thomas Berger'],
+    candidateResponse: 'accepted',
+    timezone: 'Asia/Seoul',
+  },
+
+  // Elena Petrova (interview) — 1 upcoming
+  {
+    jobIndex: 1, candidateIndex: 15,
+    title: 'Portfolio Walkthrough & Design Process',
+    type: 'video', status: 'scheduled',
+    daysOffset: 4, hour: 13, duration: 60,
+    location: 'Google Meet',
+    notes: 'Review 2-3 case studies. Assess design thinking, research methods, and handoff practices.',
+    interviewers: ['Julia Engel'],
+    candidateResponse: 'accepted',
+    timezone: 'Europe/Berlin',
+  },
+
+  // Alexander Johansson (interview) — 1 upcoming, tentative response
+  {
+    jobIndex: 1, candidateIndex: 16,
+    title: 'Introductory Design Interview',
+    type: 'video', status: 'scheduled',
+    daysOffset: 6, hour: 10, minute: 30, duration: 45,
+    location: 'Google Meet',
+    notes: 'Discuss portfolio highlights, design process, and interest in B2B SaaS products.',
+    interviewers: ['Julia Engel', 'Lisa Hoffmann'],
+    candidateResponse: 'tentative',
+    timezone: 'Europe/Stockholm',
+  },
+
+  // Maria Costa (interview) — 1 completed, 1 upcoming
+  {
+    jobIndex: 1, candidateIndex: 17,
+    title: 'Initial Screening Call',
+    type: 'phone', status: 'completed',
+    daysOffset: -5, hour: 14, duration: 30,
+    location: null,
+    notes: 'Strong cross-functional collaboration background. Interesting perspective on accessible design.',
+    interviewers: ['Anna Weiss'],
+    candidateResponse: 'accepted',
+    timezone: 'Europe/Lisbon',
+  },
+  {
+    jobIndex: 1, candidateIndex: 17,
+    title: 'Design Exercise Review & Discussion',
+    type: 'video', status: 'scheduled',
+    daysOffset: 7, hour: 11, duration: 90,
+    location: 'Google Meet',
+    notes: 'Review take-home design exercise. Assess problem framing, research approach, and visual execution.',
+    interviewers: ['Julia Engel', 'Lisa Hoffmann'],
+    candidateResponse: 'accepted',
+    timezone: 'Europe/Lisbon',
+  },
+
+  // ──────────────────────────────────────────
+  // Job 2: DevOps Engineer
+  // ──────────────────────────────────────────
+
+  // James O\'Brien (hired) — 2 rounds completed
+  {
+    jobIndex: 2, candidateIndex: 5,
+    title: 'Technical Screen — Infrastructure & CI/CD',
+    type: 'technical', status: 'completed',
+    daysOffset: -20, hour: 14, duration: 60,
+    location: 'Google Meet',
+    notes: 'Deep Docker expertise and strong GitHub Actions experience. Excellent incident response examples.',
+    interviewers: ['Daniel Krause'],
+    candidateResponse: 'accepted',
+    timezone: 'Europe/London',
+  },
+  {
+    jobIndex: 2, candidateIndex: 5,
+    title: 'System Design — Deployment Architecture',
+    type: 'technical', status: 'completed',
+    daysOffset: -14, hour: 11, duration: 90,
+    location: 'Google Meet',
+    notes: 'Outstanding architecture proposal for multi-region deployment with automated failover. Strong security awareness. Contract approved.',
+    interviewers: ['Daniel Krause', 'Thomas Berger'],
+    candidateResponse: 'accepted',
+    timezone: 'Europe/London',
+  },
+
+  // Amara Okafor (offer) — 2 rounds completed
+  {
+    jobIndex: 2, candidateIndex: 6,
+    title: 'Introductory Technical Call',
+    type: 'video', status: 'completed',
+    daysOffset: -12, hour: 13, duration: 45,
+    location: 'Google Meet',
+    notes: 'Strong platform engineering background. Good experience with Terraform and observability tooling.',
+    interviewers: ['Daniel Krause'],
+    candidateResponse: 'accepted',
+    timezone: 'Africa/Lagos',
+  },
+  {
+    jobIndex: 2, candidateIndex: 6,
+    title: 'Hands-On Technical Challenge Review',
+    type: 'technical', status: 'completed',
+    daysOffset: -6, hour: 15, duration: 75,
+    location: 'Google Meet',
+    notes: 'Well-structured solution to the Dockerized deployment exercise. Clean IaC approach. Offer being prepared.',
+    interviewers: ['Daniel Krause', 'Marcus Reiter'],
+    candidateResponse: 'accepted',
+    timezone: 'Africa/Lagos',
+  },
+
+  // Yuki Tanaka (interview) — 1 upcoming
+  {
+    jobIndex: 2, candidateIndex: 7,
+    title: 'Technical Assessment — Container Orchestration',
+    type: 'technical', status: 'scheduled',
+    daysOffset: 3, hour: 9, duration: 60,
+    location: 'Google Meet',
+    notes: 'Focus on Docker best practices, CI pipeline design, and monitoring strategies.',
+    interviewers: ['Daniel Krause'],
+    candidateResponse: 'accepted',
+    timezone: 'Asia/Tokyo',
+  },
+
+  // Lucas Andersson (interview) — 1 completed, 1 upcoming
+  {
+    jobIndex: 2, candidateIndex: 8,
+    title: 'Initial Phone Screen',
+    type: 'phone', status: 'completed',
+    daysOffset: -4, hour: 10, duration: 30,
+    location: null,
+    notes: 'Good automation mindset. Relevant experience with GitHub Actions and Postgres ops. Moving to technical round.',
+    interviewers: ['Anna Weiss'],
+    candidateResponse: 'accepted',
+    timezone: 'Europe/Stockholm',
+  },
+  {
+    jobIndex: 2, candidateIndex: 8,
+    title: 'Technical Deep-Dive — Infrastructure as Code',
+    type: 'technical', status: 'scheduled',
+    daysOffset: 8, hour: 14, duration: 75,
+    location: 'Google Meet',
+    notes: 'Practical exercise: design a CI/CD pipeline for a multi-service deployment with rollback support.',
+    interviewers: ['Daniel Krause', 'Thomas Berger'],
+    candidateResponse: 'pending',
+    timezone: 'Europe/Stockholm',
+  },
+
+  // ──────────────────────────────────────────
+  // Job 3: Technical Writer
+  // ──────────────────────────────────────────
+
+  // Felix Weber (offer) — 2 rounds completed
+  {
+    jobIndex: 3, candidateIndex: 12,
+    title: 'Writing Sample Review & Discussion',
+    type: 'video', status: 'completed',
+    daysOffset: -11, hour: 10, duration: 45,
+    location: 'Google Meet',
+    notes: 'Excellent technical writing samples. Clear information architecture and reader-first approach.',
+    interviewers: ['Lisa Hoffmann'],
+    candidateResponse: 'accepted',
+    timezone: 'Europe/Berlin',
+  },
+  {
+    jobIndex: 3, candidateIndex: 12,
+    title: 'Editorial Discussion & Team Integration',
+    type: 'video', status: 'completed',
+    daysOffset: -4, hour: 14, duration: 60,
+    location: 'Google Meet',
+    notes: 'Strong docs-as-code experience and excellent editorial judgment. Great fit for the team. Offer recommended.',
+    interviewers: ['Lisa Hoffmann', 'Sarah Chen'],
+    candidateResponse: 'accepted',
+    timezone: 'Europe/Berlin',
+  },
+
+  // David Kim (interview) — 1 upcoming
+  {
+    jobIndex: 3, candidateIndex: 14,
+    title: 'Technical Writing Assessment Review',
+    type: 'video', status: 'scheduled',
+    daysOffset: 5, hour: 10, duration: 60,
+    location: 'Google Meet',
+    notes: 'Review submitted API documentation sample. Discuss approach to developer docs and information architecture.',
+    interviewers: ['Lisa Hoffmann'],
+    candidateResponse: 'accepted',
+    timezone: 'Asia/Seoul',
+  },
+
+  // Alexander Johansson (interview) — 1 cancelled + rescheduled
+  {
+    jobIndex: 3, candidateIndex: 16,
+    title: 'Introductory Call',
+    type: 'phone', status: 'cancelled',
+    daysOffset: -3, hour: 15, duration: 30,
+    location: null,
+    notes: 'Candidate requested reschedule due to conflict. Rebooked for next week.',
+    interviewers: ['Lisa Hoffmann'],
+    candidateResponse: 'declined',
+    timezone: 'Europe/Stockholm',
+  },
+  {
+    jobIndex: 3, candidateIndex: 16,
+    title: 'Introductory Call (Rescheduled)',
+    type: 'video', status: 'scheduled',
+    daysOffset: 6, hour: 13, duration: 30,
+    location: 'Google Meet',
+    notes: 'Rescheduled from last week. Discuss writing background and interest in the role.',
+    interviewers: ['Lisa Hoffmann'],
+    candidateResponse: 'accepted',
+    timezone: 'Europe/Stockholm',
+  },
+
+  // ──────────────────────────────────────────
+  // Job 4: Frontend Engineering Intern
+  // ──────────────────────────────────────────
+
+  // Emma Schmidt (interview) — 1 completed, 1 upcoming
+  {
+    jobIndex: 4, candidateIndex: 0,
+    title: 'Intro Call — Internship Overview',
+    type: 'video', status: 'completed',
+    daysOffset: -5, hour: 14, duration: 30,
+    location: 'Google Meet',
+    notes: 'Very enthusiastic and well-prepared. Impressive personal projects using Vue and Tailwind. Strong learning velocity.',
+    interviewers: ['Sarah Chen'],
+    candidateResponse: 'accepted',
+    timezone: 'Europe/Berlin',
+  },
+  {
+    jobIndex: 4, candidateIndex: 0,
+    title: 'Technical Screen — Frontend Fundamentals',
+    type: 'technical', status: 'scheduled',
+    daysOffset: 4, hour: 10, duration: 60,
+    location: 'Google Meet',
+    notes: 'Assess HTML/CSS/JS fundamentals, component thinking, and basic Vue.js understanding.',
+    interviewers: ['Marcus Reiter'],
+    candidateResponse: 'accepted',
+    timezone: 'Europe/Berlin',
+  },
+
+  // Sofia Dubois (interview) — 1 upcoming
+  {
+    jobIndex: 4, candidateIndex: 2,
+    title: 'Internship Interview — Skills & Motivation',
+    type: 'video', status: 'scheduled',
+    daysOffset: 2, hour: 16, duration: 45,
+    location: 'Google Meet',
+    notes: 'Discuss academic projects, frontend experience, and career goals in software engineering.',
+    interviewers: ['Sarah Chen', 'Marcus Reiter'],
+    candidateResponse: 'accepted',
+    timezone: 'Europe/Paris',
+  },
+]
 
 // Sample responses for questions
 function generateResponses(jobIndex: number, candidateIndex: number): Record<string, string | string[] | boolean> {
@@ -608,6 +1062,7 @@ async function seed() {
 
   // 6. Create applications with status distribution
   let totalApps = 0
+  const applicationMap = new Map<string, string>() // key: "jobIndex-candidateIndex" → applicationId
 
   for (let jobIndex = 0; jobIndex < JOB_APPLICATIONS.length; jobIndex++) {
     const apps = JOB_APPLICATIONS[jobIndex]
@@ -623,6 +1078,7 @@ async function seed() {
       }
 
       const applicationId = id()
+      applicationMap.set(`${jobIndex}-${app.candidateIndex}`, applicationId)
       const createdDaysAgo = 1 + Math.floor(Math.random() * 15)
 
       await db.insert(schema.application).values({
@@ -662,6 +1118,45 @@ async function seed() {
   }
 
   console.log(`✅ Created ${totalApps} applications with pipeline distribution`)
+
+  // 7. Create interviews
+  let totalInterviews = 0
+
+  for (const iv of INTERVIEWS_DATA) {
+    const applicationId = applicationMap.get(`${iv.jobIndex}-${iv.candidateIndex}`)
+    if (!applicationId) {
+      console.warn(`⚠️  Skipping interview "${iv.title}" — no application found for job ${iv.jobIndex}, candidate ${iv.candidateIndex}`)
+      continue
+    }
+
+    const scheduledAt = dateWithOffset(iv.daysOffset, iv.hour, iv.minute ?? 0)
+    const responded = iv.candidateResponse !== 'pending'
+
+    await db.insert(schema.interview).values({
+      id: id(),
+      organizationId: orgId,
+      applicationId,
+      title: iv.title,
+      type: iv.type,
+      status: iv.status,
+      scheduledAt,
+      duration: iv.duration,
+      location: iv.location,
+      notes: iv.notes,
+      interviewers: iv.interviewers,
+      createdById: userId,
+      candidateResponse: iv.candidateResponse,
+      candidateRespondedAt: responded ? daysAgo(Math.abs(iv.daysOffset) + 2) : null,
+      invitationSentAt: responded ? daysAgo(Math.abs(iv.daysOffset) + 3) : null,
+      timezone: iv.timezone,
+      createdAt: daysAgo(Math.abs(iv.daysOffset) + 4),
+      updatedAt: daysAgo(Math.abs(iv.daysOffset) + 1),
+    })
+
+    totalInterviews++
+  }
+
+  console.log(`✅ Created ${totalInterviews} interviews across the pipeline`)
 
   // Summary
   const statusCounts: Record<string, number> = {}
