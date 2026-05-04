@@ -15,6 +15,28 @@ Format follows [Keep a Changelog](https://keepachangelog.com). Categories: **Add
 
 ---
 
+## [1.5.0](https://github.com/reqcore-inc/reqcore/compare/v1.4.0...v1.5.0) (2026-05-04)
+
+
+### ✨ Features
+
+* add pgDumpEnv utility to secure environment variable handling ([6fe4900](https://github.com/reqcore-inc/reqcore/commit/6fe490000487779ad008277ee650ded375bdbcf9))
+* enhance color mode functionality and improve UI responsiveness ([8068e4e](https://github.com/reqcore-inc/reqcore/commit/8068e4ec7eecb6c087d6ae45e6ce2a3e6c60374e))
+* implement nonce-based CSP middleware for enhanced security ([bfb4483](https://github.com/reqcore-inc/reqcore/commit/bfb44830d3205dc9e8c5392fdabdb8da4ed37a5e))
+* implement nonce-based CSP middleware for enhanced security ([6fe4900](https://github.com/reqcore-inc/reqcore/commit/6fe490000487779ad008277ee650ded375bdbcf9))
+
+
+### 🐛 Bug Fixes
+
+* enhance rate limiting logic and add tests ([6fe4900](https://github.com/reqcore-inc/reqcore/commit/6fe490000487779ad008277ee650ded375bdbcf9))
+* update comments for clarity and enhance rate limiting logic in production ([921ea39](https://github.com/reqcore-inc/reqcore/commit/921ea399bc35fbb006274d98faf7433fedf88aa5))
+
+
+### 🧪 Testing
+
+* add security tests for recent fixes ([6fe4900](https://github.com/reqcore-inc/reqcore/commit/6fe490000487779ad008277ee650ded375bdbcf9))
+* add unit tests for pgDumpEnv utility ([6fe4900](https://github.com/reqcore-inc/reqcore/commit/6fe490000487779ad008277ee650ded375bdbcf9))
+
 ## [1.4.0](https://github.com/reqcore-inc/reqcore/compare/v1.3.0...v1.4.0) (2026-04-30)
 
 
