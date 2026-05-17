@@ -58,17 +58,17 @@
     "zod": "^4.4.2"
   },
   "devDependencies": {
-    "@crowdin/cli": "^4.14.0",
-    "@playwright/test": "^1.58.2",
-    "@types/node": "^25.2.3",
+    "@crowdin/cli": "^4.14.2",
+    "@playwright/test": "^1.60.0",
+    "@types/node": "^25.8.0",
     "@types/nodemailer": "^8.0.0",
     "@types/pdf-parse": "^1.1.5",
     "commander": "^13.1.0",
     "drizzle-kit": "^0.31.9",
-    "tsx": "^4.21.0",
-    "vitest": "^4.1.0",
-    "vue-tsc": "^3.2.5",
-    "wait-on": "^9.0.4"
+    "tsx": "^4.22.1",
+    "vitest": "^4.1.6",
+    "vue-tsc": "^3.2.9",
+    "wait-on": "^9.0.10"
   },
   "overrides": {
     "fast-xml-parser": "5.7.1",
