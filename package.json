@@ -46,7 +46,7 @@
     "lucide-vue-next": "^0.577.0",
     "mammoth": "^1.12.0",
     "nodemailer": "^8.0.7",
-    "nuxt": "^4.4.4",
+    "nuxt": "^4.4.6",
     "pdf-parse": "^2.4.5",
     "postgres": "^3.4.8",
     "posthog-node": "^5.28.0",
