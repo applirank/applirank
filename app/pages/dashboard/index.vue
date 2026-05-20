@@ -190,32 +190,26 @@ const isEmpty = computed(() =>
       <button class="underline ml-auto font-medium cursor-pointer" @click="refresh()">Retry</button>
     </div>
 
-    <!-- ─── Empty state (brand new org) ─── -->
-    <div v-else-if="isEmpty" class="flex flex-col items-center justify-center py-24">
-      <div class="rounded-3xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 p-14 text-center max-w-md shadow-sm">
-        <div class="mx-auto mb-8 flex items-center justify-center size-18 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 shadow-lg shadow-brand-500/20">
-          <LayoutDashboard class="size-9 text-white" />
+    <!-- ─── Empty state (brand new org) — show onboarding checklist ─── -->
+    <div v-else-if="isEmpty" class="max-w-xl mx-auto py-12">
+      <div class="mb-6 text-center">
+        <div class="mx-auto mb-4 flex items-center justify-center size-14 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 shadow-lg shadow-brand-500/20">
+          <LayoutDashboard class="size-7 text-white" />
         </div>
-        <h2 class="text-2xl font-bold text-surface-900 dark:text-surface-100 mb-3 tracking-tight">
+        <h1 class="text-2xl font-bold text-surface-900 dark:text-surface-100 mb-2 tracking-tight">
           Welcome to Reqcore
-        </h2>
-        <p class="text-sm text-surface-500 dark:text-surface-400 mb-10 leading-relaxed max-w-sm mx-auto">
-          Your recruiting command center. Create your first job posting to start building your hiring pipeline.
+        </h1>
+        <p class="text-sm text-surface-500 dark:text-surface-400">
+          Complete these steps to get your hiring pipeline running.
         </p>
-        <NuxtLink
-          :to="localePath('/dashboard/jobs/new')"
-          class="inline-flex items-center gap-2.5 rounded-xl bg-brand-600 px-7 py-3.5 text-sm font-semibold text-white hover:bg-brand-700 shadow-md shadow-brand-600/20 hover:shadow-lg hover:shadow-brand-600/25 transition-all no-underline"
-        >
-          <Plus class="size-4" />
-          Create Your First Job
-        </NuxtLink>
       </div>
+      <OnboardingChecklist />
     </div>
 
     <!-- ─── Dashboard content ─── -->
     <template v-else>
       <!-- ─── Header ─── -->
-      <div class="flex items-center justify-between mb-6 sm:mb-10">
+      <div class="flex items-center justify-between mb-6 sm:mb-8">
         <div>
           <h1 class="text-xl sm:text-2xl font-bold text-surface-900 dark:text-surface-50 tracking-tight">Dashboard</h1>
           <p v-if="activeOrg" class="text-sm text-surface-400 dark:text-surface-500 mt-1">
@@ -230,6 +224,9 @@ const isEmpty = computed(() =>
           New Job
         </NuxtLink>
       </div>
+
+      <!-- ─── Onboarding checklist (auto-hides when dismissed or complete) ─── -->
+      <OnboardingChecklist />
 
       <!-- ─── Stat cards ─── -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-10">
