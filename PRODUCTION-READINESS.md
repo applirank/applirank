@@ -18,6 +18,7 @@ The codebase is promising and has several strong production signals: active upst
 - Added Node runtime expectations through `engines.node` and `.nvmrc`.
 - Updated PR and e2e workflows to use the pinned Node version.
 - Added `.gitleaks.toml` and a `Secret Scan` workflow that runs Gitleaks against full repository history.
+- Added a `CodeQL` workflow for JavaScript/TypeScript SAST with security-extended and security-and-quality queries.
 - Added an `ops:backup-restore-rehearsal` script and `Backup Restore Rehearsal` workflow so SQL dump/restore proof runs as a CI gate.
 - Added an `ops:validate-production-env` preflight with unit coverage for production secret, URL, storage, provider, email, and telemetry configuration.
 - Made PR validation report lint as "not configured" instead of silently presenting a skipped lint gate as green.
@@ -50,13 +51,14 @@ The codebase is promising and has several strong production signals: active upst
 | Chatbot privacy | Covered for per-user resources | Playwright verifies chatbot folders, agents, and conversations are scoped by both active organization and user, while same-org members can create and manage only their own chatbot resources when the feature flag is enabled. |
 | Dependency security | Passing | `npm audit --audit-level=high` and full `npm audit --json` report 0 vulnerabilities after dependency updates. |
 | Secrets | Improved | Gitleaks passes locally and in CI. Any real leaked credential requires rotation, not just allowlisting. |
+| Static application security testing | Added | CodeQL is configured for JavaScript/TypeScript on PRs, `main`, weekly schedule, and manual dispatch. Before production, require a passing CodeQL result on the exact candidate. |
 | Production environment preflight | Partially covered | `npm run ops:validate-production-env -- <env-file>` catches placeholder secrets, non-HTTPS public URLs, partial OIDC/OAuth config, weak cron secrets, S3 path-style mismatches, missing email provider posture, and telemetry processor-review prompts. It still needs to be run against the real production environment values before launch. |
 | Legal/license | Open | AGPL-3.0 obligations are reviewed and accepted for the intended deployment and any proprietary integrations. |
 | Deployment/runbook | Partially covered | `PRODUCTION-RUNBOOK.md` defines deployment, environment, monitoring, rollback, and incident procedures. `scripts/backup-restore-rehearsal.sh` verifies SQL dump/restore mechanics locally and through the `Backup Restore Rehearsal` CI workflow. Before real candidate data, run the rehearsal against a sanitized production-like backup and confirm object storage restore. |
 
 ## P0 Before Real Candidate Data
 
-1. Require PR validation, e2e, secret scan, and backup restore rehearsal checks in branch protection.
+1. Require PR validation, e2e, secret scan, CodeQL, and backup restore rehearsal checks in branch protection.
 2. Run Playwright e2e on the exact production candidate branch in CI before any release decision.
 3. Keep npm audit at 0 high/critical and triage any new moderate/low advisories before launch.
 4. Confirm production environment configuration:
@@ -128,6 +130,6 @@ Collected on 2026-05-21 from this readiness branch:
 | `npx vitest run tests/unit/production-env-validation.test.ts` | Pass | 6 tests cover complete production-like envs, placeholder rejection, partial provider rejection, HTTPS provider requirements, human-approval warnings, and `.env` parsing. |
 | `npm run ops:validate-production-env -- .env.example` | Expected fail | Confirms the preflight rejects documented example credentials and localhost public URLs. |
 | `npm run ops:backup-restore-rehearsal` | Pass | Disposable Postgres dump/restore rehearsal passed with `postgres:16-alpine`; verified sentinel row count 1. |
-| Workflow YAML parse | Pass | PR validation, e2e, secret-scan, and backup-restore workflow files parse as YAML. |
+| Workflow YAML parse | Pass | PR validation, e2e, secret-scan, CodeQL, and backup-restore workflow files parse as YAML. |
 | `npx playwright test e2e/security/tenant-isolation.spec.ts` | Pass | 3 tests passed against production build, fresh Postgres, and MinIO; verifies cross-org and unauthenticated denial for jobs, candidates, applications, interviews, scores, properties, tracking links/stats, comments, uploads, document download, preview, parse, and delete. Also verifies stale membership/session access is denied, owner DOCX parse/delete, DOCX preview denial, live member RBAC allow/deny paths, invite-link auth/max-use/revocation/expiration edges, source/activity isolation, multi-org active switching, SSO provider isolation, AI config/admin controls, email template/admin controls, chatbot per-user privacy, and Better Auth member-management denial paths. |
 | `npx playwright test` | Pass | 16 tests passed against production build on Node 22.22.0, fresh Postgres, and MinIO after the secondary-surface expansion. Local run used ports 15432/19000 because this workstation already had Postgres on 5432. |
