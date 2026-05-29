@@ -46,8 +46,14 @@ jobs:
         id: audit
         shell: bash
         run: |
-          set -euo pipefail
-          npm audit --audit-level=high 2>&1 | tee audit-output.txt
+          set -uo pipefail
+          # npm 10 (bundled with Node 20) crashes on aliased overrides
+          # ("npm:...") during audit with "Invalid comparator"; npm 11 handles
+          # them. Run audit with npm 11 and evaluate the result via a script
+          # that fails on high/critical advisories except documented allowlisted
+          # ones (see .github/scripts/check-audit.mjs).
+          npx -y npm@11 audit --json > audit-output.json 2> audit-error.txt || true
+          node .github/scripts/check-audit.mjs audit-output.json 2>&1 | tee audit-output.txt
 
       - name: Build
         id: build
